@@ -78,8 +78,9 @@ def get_likely_prime():
     # 1024 bit is still logjam prone but slightly less so (ideally 2048 bit)
     # but we only use 100 bits since primitive root algorithm is still too inefficient
     # at 100 trials, the probability for primality is greater than 1 - (2^-100)
-    # using 20 trials to speed it up (should still be 0.999999% certain)
-    # it takes ~ 30 seconds to generate a desired prime,
+    # currently takes ~20ms on my (Rotem's) PC to generate a 100 bit prime on average
+    # (using 1024 bits increases time by many orders of magnitude, but the main issue is finding a primitive root
+    # \ subgroup generator, which currently takes a very long time)
     while True:
         x = getLowLevelPrime(nBitRandom(PRIME_BITS))
         if isMillerRabinPassed(x, 100) and log2(x) >= PRIME_LEN:
