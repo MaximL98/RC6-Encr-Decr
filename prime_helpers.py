@@ -1,19 +1,19 @@
-# if sympy is not allowed, call here to generate probable prime
+"""
+NOT IN USE (prime and generator are taken from constants.py)
+"""
 import random
 import sys
 from math import log2
 
+PRIME_BITS = 1024
 try:
     import sympy
+
     primitive_root_finder = sympy.primitive_root
 except ModuleNotFoundError:
     print("The application requires the module 'sympy' to be installed. Exiting . . .", file=sys.stderr)
     exit(-1)
 
-
-# some consts
-PRIME_BITS = 7
-PRIME_LEN = 100
 # Pre generated primes
 FIRST_PRIMES_LIST = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29,
                      31, 37, 41, 43, 47, 53, 59, 61, 67,
@@ -32,8 +32,8 @@ def nBitRandom(n):
 
 
 def getLowLevelPrime(n):
-    '''Generate a prime candidate divisible
-    by first primes'''
+    """Generate a prime candidate divisible
+    by first primes"""
     while True:
         # Obtain a random number
         pc = nBitRandom(n)
@@ -54,6 +54,7 @@ def isMillerRabinPassed(mrc, trial_number=100):
     while ec & 1:  # attempt to slightly speed it up, used to be ec % 2 == 0
         ec >>= 1
         maxDivisionsByTwo += 1
+
     # assert is slightly costly?
     # assert (2 ** maxDivisionsByTwo * ec == mrc - 1)
 
@@ -75,34 +76,28 @@ def isMillerRabinPassed(mrc, trial_number=100):
 
 
 def get_likely_prime():
-    # 1024 bit is still logjam prone but slightly less so (ideally 2048 bit)
-    # but we only use 100 bits since primitive root algorithm is still too inefficient
     # at 100 trials, the probability for primality is greater than 1 - (2^-100)
-    # currently takes ~20ms on my (Rotem's) PC to generate a 100 bit prime on average
-    # (using 1024 bits increases time by many orders of magnitude, but the main issue is finding a primitive root
-    # \ subgroup generator, which currently takes a very long time)
     while True:
         x = getLowLevelPrime(nBitRandom(PRIME_BITS))
-        if isMillerRabinPassed(x, 100) and log2(x) >= PRIME_LEN:
+        if isMillerRabinPassed(x, 100):
             return x
 
 
 def get_prime_and_primitive_root():
-    prime = get_likely_prime()
+    # prime = get_likely_prime()
+    prime = sympy.nextprime(getLowLevelPrime(PRIME_BITS))
     return prime, primitive_root_finder(prime)
 
-# TODO: later:
-# def get_safe_prime():
-#     while True:
-#         factor1 = get_likely_prime()
-#         p = 2*factor1 + 1
-#         if isMillerRabinPassed(p, 20):
-#             return p
+
+def fast_primitive_root(prime):
+    # get random number between 2 and prime-1
+    while True:
+        r = random.randrange(2, (prime - 2))
+        if pow(r, (prime - 1) >> 1, prime) != 1:
+            return r
 
 
-# from tqdm import tqdm
-# for _ in tqdm(range(1000)):
-#     y = sympy.primitive_root(get_likely_prime())
-#     print(y)
+def get_prime_and_primitive_root_experimental():
+    prime = sympy.nextprime(getLowLevelPrime(PRIME_BITS))
+    return prime, fast_primitive_root(prime)
 
-# print(get_prime_and_primitive_root())

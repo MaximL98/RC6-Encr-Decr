@@ -1,4 +1,8 @@
-import prime_helpers
+import random
+import sys
+
+# import prime_helpers
+from constants import *
 """
 From Rotem :
 I automated the prime, root and key generation process,
@@ -14,7 +18,7 @@ Finally, TODO: maybe fix order? currently we get string first then create primes
 
 # rotate right input x, by n bits
 def ROR(x, n, bits=32):
-    mask = (2 ** n) - 1
+    mask = (1 << n) - 1
     mask_bits = x & mask
     return (x >> n) | (mask_bits << (bits - n))
 
@@ -57,30 +61,37 @@ def deBlocker(blocks):
 '''generateKey(userkey)'''
 
 
+def get_safe_key(prime):
+    # not safe yet, but huge range for keys
+    k=random.randint((prime-1) // 2, prime-1)
+    if not k & 1:
+        k -= 1
+    return k
+
+
 def generateKeys():
     # auto generate prime and primitive (read prime helpers, sympy is required for root as it's too hard :) )
-    P, G = prime_helpers.get_prime_and_primitive_root()
-    print(f"Generated prime: {P} with primitive root {G}")
+    P, G = PRIME, GENERATOR
+    print(f"Using prime: {P} with generator {G}")
 
     # auto generate Private Keys
-    p_range = (max(2, P//8), P-1)
-    x1, x2 = prime_helpers.random.randint(*p_range), prime_helpers.random.randint(*p_range)
-    print(f"Generated private keys: {x1=}, {x2=}")
+    x1, x2 = get_safe_key(P), get_safe_key(P)
+    # print(f"Generated private keys: {x1=}, {x2=}")
 
     # Calculate Public Keys:
-    # Rotem "fixed" this, in python pow is capable of doing a^b mod c if used with 3 args,
     # the whole op stays in C and is faster
     y1, y2 = pow(G, x1, P), pow(G, x2, P)
 
     # Generate Secret Keys
     k1, k2 = pow(y2, x1, P), pow(y1, x2, P)
-    print(f"\nSecret Key For User 1 Is {k1}\nSecret Key For User 2 Is {k2}\n")
+    # print(f"\nSecret Key For User 1 Is {k1}\nSecret Key For User 2 Is {k2}\n")
 
-    if k1 == k2:
-        print("Keys Have Been Exchanged Successfully")
-    else:
-        print("Keys Have Not Been Exchanged Successfully")
+    # if k1 == k2:
+        # print("Keys Have Been Exchanged Successfully")
+    # else:
+        # print("Keys Have Not Been Exchanged Successfully")
 
+    assert k1 == k2
     return k1, k2
 
 
@@ -92,22 +103,22 @@ def encrypt(sentence, secret):
     D = int(encoded[3], 2)
     orgi = [A, B, C, D]
     r = 12
-    modulo = 2 ** 32
+    and_modulo = 0xffffffff  # 2 ** 32 - 1
     lgw = 5
-    B = (B + secret) % modulo
-    D = (D + secret) % modulo
+    B = (B + secret) & and_modulo
+    D = (D + secret) & and_modulo
     for i in range(1, r + 1):
-        t_temp = (B * (2 * B + 1)) % modulo
+        t_temp = (B * (2 * B + 1)) & and_modulo
         t = ROL(t_temp, lgw, 32)
-        u_temp = (D * (2 * D + 1)) % modulo
+        u_temp = (D * (2 * D + 1)) & and_modulo
         u = ROL(u_temp, lgw, 32)
-        tmod = t % 32
-        umod = u % 32
-        A = (ROL(A ^ t, umod, 32) + secret) % modulo
-        C = (ROL(C ^ u, tmod, 32) + secret) % modulo
+        tmod = t & 31
+        umod = u & 31
+        A = (ROL(A ^ t, umod, 32) + secret) & and_modulo
+        C = (ROL(C ^ u, tmod, 32) + secret) & and_modulo
         (A, B, C, D) = (B, C, D, A)
-    A = (A + secret) % modulo
-    C = (C + secret) % modulo
+    A = (A + secret) & and_modulo
+    C = (C + secret) & and_modulo
     cipher = [A, B, C, D]
     return orgi, cipher
 
@@ -118,37 +129,85 @@ def decrypt(esentence, secret):
     B = int(encoded[1], 2)
     C = int(encoded[2], 2)
     D = int(encoded[3], 2)
-    cipher = []
-    cipher.append(A)
-    cipher.append(B)
-    cipher.append(C)
-    cipher.append(D)
+    cipher = [A, B, C, D]
     r = 12
-    modulo = 2 ** 32
+    and_modulo = 0xffffffff  # 2 ** 32 - 1
     lgw = 5
-    C = (C - secret) % modulo
-    A = (A - secret) % modulo
+    C = (C - secret) & and_modulo
+    A = (A - secret) & and_modulo
     for j in range(1, r + 1):
         (A, B, C, D) = (D, A, B, C)
-        u_temp = (D * (2 * D + 1)) % modulo
+        u_temp = (D * (2 * D + 1)) & and_modulo
         u = ROL(u_temp, lgw, 32)
-        t_temp = (B * (2 * B + 1)) % modulo
+        t_temp = (B * (2 * B + 1)) & and_modulo
         t = ROL(t_temp, lgw, 32)
-        tmod = t % 32
-        umod = u % 32
-        C = (ROR((C - secret) % modulo, tmod, 32) ^ u)
-        A = (ROR((A - secret) % modulo, umod, 32) ^ t)
-    D = (D - secret) % modulo
-    B = (B - secret) % modulo
+        tmod = t & 31
+        umod = u & 31
+        C = (ROR((C - secret) & and_modulo, tmod, 32) ^ u)
+        A = (ROR((A - secret) & and_modulo, umod, 32) ^ t)
+    D = (D - secret) & and_modulo
+    B = (B - secret) & and_modulo
     orgi = [A, B, C, D]
     return cipher, orgi
+
+
+def rotems_main():
+    # an attempt to encrypt-decrypt a block of blocks
+    sentence = input("Enter Sentence: ")
+    # random "sentence" generator for testing
+    # sentence = ''.join([chr(random.randint(ord('A'), ord('z')))
+    #          for _ in range(random.randint(20, 45))])
+
+    # split message to 128 bits blocks
+    lst_of_sentences = [sentence[i:i + 16] for i in range(0, len(sentence), 16)]
+    for i, sent in enumerate(lst_of_sentences):
+        if len(sent) != 16:
+            lst_of_sentences[i] = sent + ' ' * (16 - len(sent))
+
+    print(f'Input:\t {sentence}')
+
+    secret1, secret2 = generateKeys()
+
+    # for debug     , for decryption / to send
+    e_whole_sentence, encrypted_blocks = encrypt_many_single_key(lst_of_sentences, secret1)
+
+    tmp = e_whole_sentence.encode()
+    print(f'Encrypted String (as binary): {tmp}')
+
+    decrypted_text = decrypt_many_single_key(encrypted_blocks, secret2)
+    try:
+        assert decrypted_text[:len(sentence)] == sentence
+    except AssertionError:
+        print(f"ERROR - encryption-decryption process failed!\nsrc: {sentence}\ndest: {decrypted_text}",
+              file=sys.stderr)
+        exit(-1)
+
+    print("\nDecrypted:\t", decrypted_text)
+
+
+def decrypt_many_single_key(encrypted_blocks, key):
+    decrypted_text = ''
+    for block in encrypted_blocks:
+        cipher, orgi = decrypt(block, key)
+        decrypted_text += deBlocker(orgi)
+    return decrypted_text
+
+
+def encrypt_many_single_key(lst_of_sentences, key):
+    encrypted_blocks = []
+    e_whole_sentence = ''
+    for sent in lst_of_sentences:
+        orgi, cipher = encrypt(sent, key)
+        esentence = deBlocker(cipher)
+        e_whole_sentence += esentence
+        encrypted_blocks.append(esentence)
+    return e_whole_sentence, encrypted_blocks
 
 
 def main():
     sentence = input("Enter Sentence (0-16 characters): ")
 
-    sentence = sentence + " " * (16 - len(sentence))
-
+    sentence = sentence + " " * max(0, (16 - len(sentence)))
     secret1, secret2 = generateKeys()
     sentence = sentence[:16]
 
@@ -170,4 +229,6 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    #main()
+    # now calling my main
+    rotems_main()
