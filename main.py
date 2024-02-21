@@ -5,14 +5,8 @@ import sys
 from constants import *
 """
 From Rotem :
-I automated the prime, root and key generation process,
-try to mess with the PRIME_BITS and PRIME_LEN consts in prime_helpers.py if this runs too slow,
-values of 7,100 respectively should work fast enough (can reduce 100 by a bit, don't touch the 7).
-
-Also, todo tell me if key range is too low, I set it between prime / 2 and prime-1 (so it's large), 
-but maybe range should be larger as in (2, prime-1) 
-
-Finally, TODO: maybe fix order? currently we get string first then create primes and keys, should this be the order?
+Now prime and generator are both given, and keys are randomly generated in range of prime // 2 to prime (roughly).
+TODO - define proper process to weed out weak keys.
 """
 
 
