@@ -237,10 +237,9 @@ def rotems_main_verbose():
     msg_bytes = sentence.encode()
     # apply hash function
     hashed_message = hashlib.sha256(msg_bytes).digest()
-    # get public key as bytes
     # verify
     result = schnorr_lib.schnorr_verify(hashed_message, public_key, sig)
-    print(f"Verifying signature: {result}")
+    print(f"Signature verification result: {result}")
     tmp = e_whole_sentence.encode()
     print(f'Encrypted String (as binary): {tmp}')
 
