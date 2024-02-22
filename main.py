@@ -165,42 +165,28 @@ def decrypt(esentence, secret):
     return cipher, orgi
 
 
-def rotems_main():
-    # an attempt to encrypt-decrypt a block of blocks
-    sentence = input("Enter Sentence: ")
-    # random "sentence" generator for testing
-    # sentence = ''.join([chr(random.randint(ord('A'), ord('z')))
-    #          for _ in range(random.randint(20, 45))])
+def decrypt_many_single_key(encrypted_blocks, key):
+    decrypted_text = ''
+    for block in encrypted_blocks:
+        cipher, orgi = decrypt(block, key)
+        decrypted_text += deBlocker(orgi)
+    return decrypted_text
 
-    # split message to 128 bits blocks
-    lst_of_sentences = [sentence[i:i + 16] for i in range(0, len(sentence), 16)]
-    for i, sent in enumerate(lst_of_sentences):
-        if len(sent) != 16:
-            lst_of_sentences[i] = sent + ' ' * (16 - len(sent))
 
-    print(f'Input:\t {sentence}')
-
-    secret1, secret2, _ = generateKeys()
-
-    # for debug     , for decryption / to send
-    e_whole_sentence, encrypted_blocks = encrypt_many_single_key(lst_of_sentences, secret1)
-
-    tmp = e_whole_sentence.encode()
-    print(f'Encrypted String (as binary): {tmp}')
-
-    decrypted_text = decrypt_many_single_key(encrypted_blocks, secret2)
-    try:
-        assert decrypted_text[:len(sentence)] == sentence
-    except AssertionError:
-        print(f"ERROR - encryption-decryption process failed!\nsrc: {sentence}\ndest: {decrypted_text}",
-              file=sys.stderr)
-        exit(-1)
-
-    print("\nDecrypted:\t", decrypted_text)
+def encrypt_many_single_key(lst_of_sentences, key):
+    encrypted_blocks = []
+    e_whole_sentence = ''
+    for sent in lst_of_sentences:
+        orgi, cipher = encrypt(sent, key)
+        esentence = deBlocker(cipher)
+        e_whole_sentence += esentence
+        encrypted_blocks.append(esentence)
+    return e_whole_sentence, encrypted_blocks
 
 
 def rotems_main_verbose():
-    # an attempt to encrypt-decrypt a block of blocks
+    # encrypt-decrypt a block of blocks
+    # Now fit with Schnorr signature
     """
     Obtain input
     """
@@ -271,51 +257,6 @@ def rotems_main_verbose():
 
     print("\nDecrypted:\t", decrypted_text)
 
-
-def decrypt_many_single_key(encrypted_blocks, key):
-    decrypted_text = ''
-    for block in encrypted_blocks:
-        cipher, orgi = decrypt(block, key)
-        decrypted_text += deBlocker(orgi)
-    return decrypted_text
-
-
-def encrypt_many_single_key(lst_of_sentences, key):
-    encrypted_blocks = []
-    e_whole_sentence = ''
-    for sent in lst_of_sentences:
-        orgi, cipher = encrypt(sent, key)
-        esentence = deBlocker(cipher)
-        e_whole_sentence += esentence
-        encrypted_blocks.append(esentence)
-    return e_whole_sentence, encrypted_blocks
-
-
-def main():
-    sentence = input("Enter Sentence (0-16 characters): ")
-
-    sentence = sentence + " " * max(0, (16 - len(sentence)))
-    secret1, secret2 = generateKeys()
-    sentence = sentence[:16]
-
-    orgi, cipher = encrypt(sentence, secret1)
-    esentence = deBlocker(cipher)
-
-    print("Input:\t " + sentence)
-
-    print("\nOriginal String list: ", orgi)
-    print("Length of Input String: ", len(sentence))
-
-    print("\nEncrypted String list: ", cipher)
-    print("Encrypted String: " + esentence)
-    print("Length of Encrypted String: ", len(esentence))
-
-    cipher, orgi = decrypt(esentence, secret2)
-    sentence = deBlocker(orgi)
-    print("\nDecrypted:\t", sentence)
-
-
 if __name__ == "__main__":
-    #main()
     # now calling my main (verbose)
     rotems_main_verbose()
