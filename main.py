@@ -77,7 +77,7 @@ def deBlocker(blocks):
 
 def get_safe_key(prime):
     # not safe yet, but huge range for keys
-    k=random.randint((prime-1) // (2**100), (prime-1)//(2**99))
+    k=random.randint((prime-1) // 2, (prime - 1))
     if not k & 1:
         k -= 1
     return k
