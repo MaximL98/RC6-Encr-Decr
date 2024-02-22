@@ -1,71 +1,52 @@
-import math
-import sys
-from diffie_hellman import *
+# Importing necessary modules and functions
+import argparse, sys, math
+from utils import print_fails # Importing a utility function for error handlin
 
-#rotate right input x, by n bits
+from diffie_hellman import * # Importing Diffie-Hellman key exchange functions
+from schnorr_lib import sha256, schnorr_sign, schnorr_musig_sign, schnorr_musig2_sign, schnorr_verify # Importing Schnorr signature functions
+
+# Function to perform bitwise rotation to the right
 def ROR(x, n, bits = 32):
-    mask = (2**n) - 1
-    mask_bits = x & mask
-    return (x >> n) | (mask_bits << (bits - n))
+    mask = (2**n) - 1 # Creating a mask to select the bits to be rotated
+    mask_bits = x & mask # Applying the mask to get the bits to be rotated
+    return (x >> n) | (mask_bits << (bits - n)) # Performing the rotation
 
-#rotate left input x, by n bits
+# Function to perform bitwise rotation to the left
 def ROL(x, n, bits = 32):
-    return ROR(x, bits - n,bits)
+    return ROR(x, bits - n,bits) # Simply calling ROR with adjusted parameters
 
-#convert input sentence into blocks of binary
-#creates 4 blocks of binary each of 32 bits.
+# Function to convert a sentence into blocks of binary, each block being  32 bits
 def blockConverter(sentence):
-    encoded = []
-    res = ""
+    encoded = []  # List to store the binary blocks
+    res = "" # Temporary string to hold the binary representation of each character
     for i in range(0,len(sentence)):
-        if i%4==0 and i!=0 :
-            encoded.append(res)
-            res = ""
-        temp = bin(ord(sentence[i]))[2:]
-        if len(temp) <8:
-            temp = "0"*(8-len(temp)) + temp
-        res = res + temp
-    encoded.append(res)
-    return encoded
+        if i%4==0 and i!=0 : # If the character is the  4th in the block
+            encoded.append(res) # Append the current block to the list
+            res = "" # Reset the temporary string
+        temp = bin(ord(sentence[i]))[2:] # Convert the character to binary
+        if len(temp) <8: # If the binary representation is less than  8 bits
+            temp = "0"*(8-len(temp)) + temp # Pad with zeros
+        res = res + temp # Append the binary representation to the temporary string
+    encoded.append(res) # Append the last block
+    return encoded # Return the list of binary blocks
 
-#converts 4 blocks array of long int into string
+# Function to convert a list of binary blocks back into a string
 def deBlocker(blocks):
-    s = ""
+    s = "" # String to hold the final result
     for ele in blocks:
-        temp =bin(ele)[2:]
-        if len(temp) <32:
-            temp = "0"*(32-len(temp)) + temp
-        for i in range(0,4):
-            s=s+chr(int(temp[i*8:(i+1)*8],2))
-    return s
+        temp =bin(ele)[2:] # Convert the integer to binary
+        if len(temp) <32: # If the binary representation is less than  32 bits
+            temp = "0"*(32-len(temp)) + temp # Pad with zeros
+        for i in range(0,4): # For each character in the block
+            s=s+chr(int(temp[i*8:(i+1)*8],2)) # Convert binary back to character and append to the string
+    return s # Return the final string
 
-#generate key s[0... 2r+3] from given input string userkey
-'''generateKey(userkey)'''
+# Function to generate keys for encryption and decryption
 def generateKeys():
-    '''r=12
-    w=32
-    b=len(userkey)
-    modulo = 2**32
-    s=(2*r+4)*[0]
-    s[0]=0xB7E15163
-    for i in range(1,2*r+4):
-        s[i]=(s[i-1]+0x9E3779B9)%(2**w)
-    encoded = blockConverter(userkey)
-    #print encoded
-    enlength = len(encoded)
-    l = enlength*[0]
-    for i in range(1,enlength+1):
-        l[enlength-i]=int(encoded[i-1],2)
-    
-    v = 3*max(enlength,2*r+4)
-    A=B=i=j=0
-    
-    for index in range(0,v):
-        A = s[i] = ROL((s[i] + A + B)%modulo,3,32)
-        B = l[j] = ROL((l[j] + A + B)%modulo,(A+B)%32,32) 
-        i = (i + 1) % (2*r + 4)
-        j = (j + 1) % enlength
-    return s'''
+    # Code for generating keys using Diffie-Hellman key exchange
+    # This includes getting user input for prime number and primitive root, 
+    # checking their validity, and calculating public and private keys
+    # Finally, it checks if the secret keys are the same for both users
     l = []
     while 1:
         P = int(input("Enter P : "))
@@ -105,11 +86,13 @@ def generateKeys():
     else:
         print("Keys Have Not Been Exchanged Successfully")
     
-    return k1, k2
+    return k1, k2, P, G
 
+# Function to encrypt a sentence using a secret key
 def encrypt(sentence, secret):
+    # Code for encrypting a sentence by converting it to binary blocks, 
+    # performing encryption operations, and returning the original and encrypted blocks
     encoded = blockConverter(sentence)
-    #enlength = len(encoded)
     A = int(encoded[0],2)
     B = int(encoded[1],2)
     C = int(encoded[2],2)
@@ -144,10 +127,11 @@ def encrypt(sentence, secret):
     cipher.append(D)
     return orgi,cipher
 
-
+# Function to decrypt an encrypted sentence using a secret key
 def decrypt(esentence, secret):
+    # Code for decrypting an encrypted sentence by converting it back to binary blocks, 
+    # performing decryption operations, and returning the decrypted blocks
     encoded = blockConverter(esentence)
-    #enlength = len(encoded)
     A = int(encoded[0],2)
     B = int(encoded[1],2)
     C = int(encoded[2],2)
@@ -184,24 +168,57 @@ def decrypt(esentence, secret):
     return cipher,orgi
 
 
-
-
-
+# Main function to execute the program
 def main():
-
-    #key = input("Enter Key (0-16 characters): ")
+    # Code for getting user input, generating keys, 
+    # encrypting and decrypting a sentence, and verifying the signature
     sentence = input("Enter Sentence (0-16 characters): ")
-
     sentence =sentence + " "*(16-len(sentence))
-    #key =key + " "*(16-len(key))
-
-    #key = key[:16]
-                         
-    #print("Key:\t"+key) 
-    #s = generateKeys(key)
-    secret1, secret2 = generateKeys()
+   
+    secret1, secret2, P, G = generateKeys()
     sentence = sentence[:16]
-    
+    secret_keys = [secret1, secret2]
+
+    ### SCHNORR SIGN STARTS HERE ###    
+    # Signature
+    try:
+        # Get message digest
+        M = sha256(sentence.encode())
+        X = None
+
+        sig = schnorr_sign(M, str(secret_keys[0]))
+
+        print("> Message =", M.hex())
+        print("> Signature =", sig.hex())
+        if X is not None: 
+            print("> Public aggregate=", X.hex())   
+    except Exception as e:
+            print_fails("[e] Exception:", e)
+            sys.exit(2)
+    ################################
+
+    ### SCHNORR VERIFY ###
+    try: 
+        msg_bytes = sha256(sentence.encode())
+        sig_bytes = bytes.fromhex(sig.hex())
+        print(f"P.to_bytes(P.bit_length() + 7 // 8, 'big') = {P.to_bytes(P.bit_length() + 7 // 8, 'big')}")
+        pubkey_bytes = P.to_bytes(P.bit_length() + 7 // 8, 'big')
+
+        result = schnorr_verify(msg_bytes, pubkey_bytes, sig_bytes)
+        print("\nThe signature is: ", sig)
+        print("The public key is: ", P)
+        print('The message digest is:', msg_bytes.hex())
+        print("\nIs the signature valid for this message and this public key? ")
+        if result:
+            print_success("Yes")
+        else:
+            print_fails("No")
+    except Exception as e:
+        print_fails("[e] Exception:", e)
+        sys.exit(2)
+
+    ######################
+
     orgi,cipher = encrypt(sentence, secret1)
     esentence = deBlocker(cipher)
     
@@ -219,4 +236,4 @@ def main():
     print("\nDecrypted:\t",sentence)
 
 if __name__ == "__main__":
-	main()
+	main() # Execute the main function if the script is run directly
