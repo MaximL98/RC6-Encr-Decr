@@ -1,5 +1,9 @@
 import random
 import sys
+# hash imports
+import hashlib
+# Schnorr import
+import schnorr_lib
 
 # import prime_helpers
 from constants import *
@@ -7,6 +11,22 @@ from constants import *
 From Rotem :
 Now prime and generator are both given, and keys are randomly generated in range of prime // 2 to prime (roughly).
 TODO - define proper process to weed out weak keys.
+
+from Rotem new:
+Schnorr signature now (probably) works, I changed the following
+- changed the original encryption prime to the one in schnorr-lib, and set the generator to 3 (as it is).
+- the signature is calculated over the digest (by the sender), using the same private key as the one he used to 
+encrpyt the message (maybe this is not ideal?)
+- the signature is then generated
+- the verification process required a proper public key, NOT P (not the prime!), but the output of the
+"pubkey_gen_from_hex(private_key)" function! (you could use the int variant but since we convert to hex 
+during the signing process I just called this one.
+- Now, call verify as such: schnorr_verify(digest, public_key, sig) and get True since the math does work
+
+Our mistake was using improper public key.
+Maybe my mistake now is to use the same keyspace for all 3 components (DH, RC6 and Schnorr) but that's TBDiscussed.
+Enjoy.
+
 """
 
 
@@ -57,16 +77,16 @@ def deBlocker(blocks):
 
 def get_safe_key(prime):
     # not safe yet, but huge range for keys
-    k=random.randint((prime-1) // 2, prime-1)
+    k=random.randint((prime-1) // (2**100), (prime-1)//(2**99))
     if not k & 1:
         k -= 1
     return k
 
 
 def generateKeys():
-    # auto generate prime and primitive (read prime helpers, sympy is required for root as it's too hard :) )
+    # prime and generator are given in constants.
     P, G = PRIME, GENERATOR
-    print(f"Using prime: {P} with generator {G}")
+    # print(f"Using prime: {P} with generator {G}")
 
     # auto generate Private Keys
     x1, x2 = get_safe_key(P), get_safe_key(P)
@@ -86,7 +106,7 @@ def generateKeys():
         # print("Keys Have Not Been Exchanged Successfully")
 
     assert k1 == k2
-    return k1, k2
+    return k1, k2, x1
 
 
 def encrypt(sentence, secret):
@@ -160,7 +180,7 @@ def rotems_main():
 
     print(f'Input:\t {sentence}')
 
-    secret1, secret2 = generateKeys()
+    secret1, secret2, _ = generateKeys()
 
     # for debug     , for decryption / to send
     e_whole_sentence, encrypted_blocks = encrypt_many_single_key(lst_of_sentences, secret1)
@@ -168,6 +188,79 @@ def rotems_main():
     tmp = e_whole_sentence.encode()
     print(f'Encrypted String (as binary): {tmp}')
 
+    decrypted_text = decrypt_many_single_key(encrypted_blocks, secret2)
+    try:
+        assert decrypted_text[:len(sentence)] == sentence
+    except AssertionError:
+        print(f"ERROR - encryption-decryption process failed!\nsrc: {sentence}\ndest: {decrypted_text}",
+              file=sys.stderr)
+        exit(-1)
+
+    print("\nDecrypted:\t", decrypted_text)
+
+
+def rotems_main_verbose():
+    # an attempt to encrypt-decrypt a block of blocks
+    """
+    Obtain input
+    """
+    sentence = input("Enter Sentence: ")
+    # random "sentence" generator for testing
+    # sentence = ''.join([chr(random.randint(ord('A'), ord('z')))
+    #          for _ in range(random.randint(20, 45))])
+
+    # split message to 128 bits blocks
+    lst_of_sentences = [sentence[i:i + 16] for i in range(0, len(sentence), 16)]
+    for i, sent in enumerate(lst_of_sentences):
+        if len(sent) != 16:
+            lst_of_sentences[i] = sent + ' ' * (16 - len(sent))
+
+    print(f'Input:\t {sentence}')
+
+    secret1, secret2, private_key_1 = generateKeys()
+    """
+    Encrypt input
+    """
+    # for debug     , for decryption / to send
+    e_whole_sentence, encrypted_blocks = encrypt_many_single_key(lst_of_sentences, secret1)
+
+    """
+    Get original message digest
+    """
+    message_hash_digest = hashlib.sha256(sentence.encode()).digest()
+    print(f"Clear-text digest: {message_hash_digest}")
+    private_key_as_hex_string = hex(private_key_1)[2:]
+    if len(private_key_as_hex_string) % 2:
+        private_key_as_hex_string = '0' + private_key_as_hex_string
+    print(f"{private_key_as_hex_string=}")
+
+    """
+    Sign message using Schnorr signature via private key (private_key_1)
+    """
+    sig = schnorr_lib.schnorr_sign(message_hash_digest, private_key_as_hex_string)
+    print(f"Signature: {sig.hex()}")
+    """
+    Generate public key PROPERLY to with message
+    """
+    public_key = schnorr_lib.pubkey_gen_from_hex(private_key_as_hex_string)
+
+    """
+    Verify signature using public key
+    """
+    # get original message as bytes:
+    msg_bytes = sentence.encode()
+    # apply hash function
+    hashed_message = hashlib.sha256(msg_bytes).digest()
+    # get public key as bytes
+    # verify
+    result = schnorr_lib.schnorr_verify(hashed_message, public_key, sig)
+    print(f"Verifying signature: {result}")
+    tmp = e_whole_sentence.encode()
+    print(f'Encrypted String (as binary): {tmp}')
+
+    """
+    Decrypt message
+    """
     decrypted_text = decrypt_many_single_key(encrypted_blocks, secret2)
     try:
         assert decrypted_text[:len(sentence)] == sentence
@@ -224,5 +317,5 @@ def main():
 
 if __name__ == "__main__":
     #main()
-    # now calling my main
-    rotems_main()
+    # now calling my main (verbose)
+    rotems_main_verbose()
