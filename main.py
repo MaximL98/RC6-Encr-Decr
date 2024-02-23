@@ -29,22 +29,28 @@ Enjoy.
 
 """
 
+# condition to use the 256bit prime from the schnorr library as both the DH prime and Schnorr prime.
+USING_SCHNORR_PRIME_IN_DH = True
+if USING_SCHNORR_PRIME_IN_DH:
+    PRIME = schnorr_lib.p
+    GENERATOR = 3
 
-# rotate right input x, by n bits
+
 def ROR(x, n, bits=32):
+    """rotate right input x, by n bits"""
     mask = (1 << n) - 1
     mask_bits = x & mask
     return (x >> n) | (mask_bits << (bits - n))
 
 
-# rotate left input x, by n bits
 def ROL(x, n, bits=32):
+    """rotate left input x, by n bits"""
     return ROR(x, bits - n, bits)
 
 
-# convert input sentence into blocks of binary
-# creates 4 blocks of binary each of 32 bits.
 def blockConverter(sentence):
+    """convert input sentence into blocks of binary
+       creates 4 blocks of binary each of 32 bits."""
     encoded = []
     res = ""
     for i in range(0, len(sentence)):
@@ -59,24 +65,25 @@ def blockConverter(sentence):
     return encoded
 
 
-# converts 4 blocks array of long int into string
 def deBlocker(blocks):
+    """converts 4 blocks array of long int into string"""
     s = ""
     for ele in blocks:
         temp = bin(ele)[2:]
+        # print(f"deBlocker working on element {temp}\n",file=sys.stderr)
         if len(temp) < 32:
             temp = "0" * (32 - len(temp)) + temp
         for i in range(0, 4):
+            # print(f"Appending to {s}: {s} + {chr(int(temp[i * 8:(i + 1) * 8], 2))=}")
             s = s + chr(int(temp[i * 8:(i + 1) * 8], 2))
+    # print(f"Input:\n{blocks}\nOutput:\n{s}")
     return s
 
 
-# generate key s[0... 2r+3] from given input string userkey
-'''generateKey(userkey)'''
-
-
 def get_safe_key(prime):
+    """Get odd key between prime // 2 and prime - 1"""
     # not safe yet, but huge range for keys
+    # for n bit prime, we get n - 1 bits of keyspace (in current version, 2047 bits)
     k=random.randint((prime-1) // 2, (prime - 1))
     if not k & 1:
         k -= 1
@@ -84,6 +91,8 @@ def get_safe_key(prime):
 
 
 def generateKeys():
+    """Returns both secret keys AFTER THE EXCHANGE.
+     TODO: simulate the actual exchange, remember that this function returns identical keys, NOT PRIVATE KEYS"""
     # prime and generator are given in constants.
     P, G = PRIME, GENERATOR
     # print(f"Using prime: {P} with generator {G}")
@@ -106,7 +115,7 @@ def generateKeys():
         # print("Keys Have Not Been Exchanged Successfully")
 
     assert k1 == k2
-    return k1, k2, x1
+    return k1, k2
 
 
 def encrypt(sentence, secret):
@@ -203,7 +212,10 @@ def rotems_main_verbose():
 
     print(f'Input:\t {sentence}')
 
-    secret1, secret2, private_key_1 = generateKeys()
+    # generate keys for encryption (over the large prime field chosen in "constants.py")
+    secret1, secret2 = generateKeys()
+    # generate the Schnorr key (over the prime field defined in schnorr lib)
+    sch_key = random.randint(0, schnorr_lib.n - 1)
     """
     Encrypt input
     """
@@ -215,7 +227,7 @@ def rotems_main_verbose():
     """
     message_hash_digest = hashlib.sha256(sentence.encode()).digest()
     print(f"Clear-text digest: {message_hash_digest}")
-    private_key_as_hex_string = hex(private_key_1)[2:]
+    private_key_as_hex_string = hex(sch_key)[2:]
     if len(private_key_as_hex_string) % 2:
         private_key_as_hex_string = '0' + private_key_as_hex_string
     print(f"{private_key_as_hex_string=}")
