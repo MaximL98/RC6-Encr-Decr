@@ -2,6 +2,7 @@ from typing import Tuple, Optional
 from binascii import unhexlify
 import hashlib
 import os
+import random
 
 # Elliptic curve parameters
 p = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F
@@ -423,3 +424,22 @@ def schnorr_musig2_sign(msg: bytes, users: list) -> bytes:
     if not schnorr_verify(msg, bytes_from_point(X), signature_bytes):
         raise RuntimeError('The created signature does not pass verification.')
     return signature_bytes, bytes_from_point(X)
+
+
+'''ADDED FUNCTIONS'''
+
+# generate the Schnorr key (over the prime field defined in schnorr lib)
+def sch_key_gen():
+    return random.randint(0, n - 1)
+
+def msg_hash_digest(sentence):
+    message_hash_digest = hashlib.sha256(sentence.encode()).digest()
+    print(f"Clear-text digest: {message_hash_digest}")
+    return message_hash_digest
+
+def get_hex_private_key(sch_key):
+    private_key_as_hex_string = hex(sch_key)[2:]
+    if len(private_key_as_hex_string) % 2:
+        private_key_as_hex_string = '0' + private_key_as_hex_string
+    print(f"{private_key_as_hex_string=}")
+    return private_key_as_hex_string
