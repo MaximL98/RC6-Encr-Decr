@@ -110,6 +110,8 @@ def main():
     ("Matthew", "Taylor", hash_func(2345), 852963741, "10/31", 321),
     ("Lauren", "Anderson", hash_func(5432), 963852741, "03/29", 654)]
 
+    testing_data = [("c1", "c1", hash_func(1111), 1, "1/1", 111)]
+
     #insert_data(conn, people_data)
 
     # Retrieve passcode for a specific card number
