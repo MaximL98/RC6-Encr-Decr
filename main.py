@@ -1,33 +1,15 @@
 import sys
-# hash imports
-import hashlib
 
-# import prime_helpers
-from constants import *
+import db_control
 from rc6_encr_decr import *
 from dh_key_gen import *
-#from schnorr_lib import *
+
 """
 From Rotem :
-Now prime and generator are both given, and keys are randomly generated in range of prime // 2 to prime (roughly).
-TODO - define proper process to weed out weak keys.
-
-from Rotem new:
-Schnorr signature now (probably) works, I changed the following
-- changed the original encryption prime to the one in schnorr-lib, and set the generator to 3 (as it is).
-- the signature is calculated over the digest (by the sender), using the same private key as the one he used to 
-encrpyt the message (maybe this is not ideal?)
-- the signature is then generated
-- the verification process required a proper public key, NOT P (not the prime!), but the output of the
-"pubkey_gen_from_hex(private_key)" function! (you could use the int variant but since we convert to hex 
-during the signing process I just called this one.
-- Now, call verify as such: schnorr_verify(digest, public_key, sig) and get True since the math does work
-
-Our mistake was using improper public key.
-Maybe my mistake now is to use the same keyspace for all 3 components (DH, RC6 and Schnorr) but that's TBDiscussed.
-Enjoy.
-
+- Check if our keys are defined properly (we use the key from DH in RC6)
+- Weak keys? other security issues?
 """
+
 
 # split message to 128 bits blocks
 def split_sentence(sentence):
@@ -37,7 +19,6 @@ def split_sentence(sentence):
             lst_of_sentences[i] = sent + ' ' * (16 - len(sent))
     print(f'Input:\t {sentence}')
     return lst_of_sentences
-
 
 
 def rotems_main_verbose():
@@ -110,7 +91,7 @@ def rotems_main_verbose():
             assert decrypted_text[:len(sentence)] == sentence
         except AssertionError:
             print(f"ERROR - encryption-decryption process failed!\nsrc: {sentence}\ndest: {decrypted_text}",
-                file=sys.stderr)
+                  file=sys.stderr)
             exit(-1)
         print("\nDecrypted:\t", decrypted_text)
 
@@ -122,7 +103,6 @@ def rotems_main_verbose():
     # 2. Will send back (encr?) msg that cmd was completed successfully
     ## END?
 
-    
 
 if __name__ == "__main__":
     # now calling my main (verbose)
