@@ -3,12 +3,11 @@ body {
     color: #fff; /* White text */
     font-family: Arial, sans-serif; /* Clean, professional font */
     display: flex;
-    flex-direction: row; /* Stack elements vertically */
+    flex-direction: space-between; 
     align-items: center; /* Center horizontally */
     justify-content: center; /* Center vertically */
     min-height: 100vh; /* Ensure content takes up full screen height */
-    margin: 0;
-    
+    margin: 0;    
 }
 
 .container {
@@ -16,14 +15,13 @@ body {
     flex-direction: column; /* Arrange elements in a column for responsiveness */
     align-items: center;
     background-color: #333; /* Slightly lighter background for blocks */
-    padding: 30px;
     border-radius: 8px; 
-    margin-left: 100px;
-    margin-right: 100px;
+    margin-left: 50px;
+    margin-right: 50px;
     margin-top: 0px;
     margin-bottom: 0px;
     height: 800px;
-    width: 400px;
+    width: 395px;
 }
 
 h2 {
@@ -31,15 +29,22 @@ h2 {
 }
 
 .input-block {
+    height: 1000px;
     padding: 10px;
+
     margin-bottom: 20px; /* Add spacing between blocks */
-    width: 100%; 
+    width: 500px; 
     max-width: 500px; /* Limit the width for a contained look */
     text-align: center; /* Center content within blocks */
+    display: flex;
+    flex-direction: column; /* Arrange elements in a column for responsiveness */
+    align-items: center;
 }
 
 .info-block {
     height: 1000px;
+    padding: 10px;
+
     margin-bottom: 20px; /* Add spacing between blocks */
     width: 500px; 
     max-width: 500px; /* Limit the width for a contained look */
@@ -48,8 +53,6 @@ h2 {
 
 .output-block {
     height: 1000px;
-
-    padding: 10px;
     margin-bottom: 20px; /* Add spacing between blocks */
     width: 500px; 
     max-width: 400px; /* Limit the width for a contained look */
@@ -58,7 +61,7 @@ h2 {
 
 
 input[type="text"], input[type="password"] {
-    width: 100%;
+    width: 200px;
     padding: 10px;
     margin-bottom: 10px;
     background-color: #444;
@@ -76,10 +79,23 @@ button {
     border-radius: 4px;
 }
 
-.passing-dots {
-    display: flex;
-    justify-content: space-between;
-    flex-direction: row;
-    width: 100px;
-    margin: 0 auto;
+.passing-dots1 {
+    width: 300px;
+}
+
+.passing-dots2 {
+    width: 300px;
+}
+
+.dot {
+    height: 5px;
+    width: 5px;
+    background-color: #bbb;
+    border-radius: 50%;
+    display: inline-block;
+    margin-left: 5px;
+}
+
+.bankButton {
+    background-color: transparent;
 }

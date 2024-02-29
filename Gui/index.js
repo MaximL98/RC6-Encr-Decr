@@ -9,6 +9,46 @@ document.getElementById('encrypt-button').addEventListener('click', async functi
     document.getElementById('output').removeChild(document.getElementById('output').firstChild);
   }
 
+  // Animation code:
+  const dotContainer = document.querySelector('.passing-dots1');
+  const dotCount = 6;
+  const dotDuration = 2000; // Each dot appears for 0.5 seconds
+  const delayBetweenDots = 150;
+  for (let i = dotCount; i > 0; i--) {
+    setTimeout(() => {
+      const dot = document.createElement('div');
+      dot.classList.add('dot');
+      dotContainer.appendChild(dot);
+
+      setTimeout(() => dot.remove(), dotDuration);
+    }, i * delayBetweenDots);
+  }
+
+  setTimeout(() => {
+    for (let i = dotCount; i > 0; i--) {
+      setTimeout(() => {
+        const dot = document.createElement('div');
+        dot.classList.add('dot');
+        dotContainer.appendChild(dot);
+
+        setTimeout(() => dot.remove(), dotDuration);
+      }, i * delayBetweenDots);
+    }
+  }, 2750);
+
+  setTimeout(() => {
+    for (let i = dotCount; i > 0; i--) {
+      setTimeout(() => {
+        const dot = document.createElement('div');
+        dot.classList.add('dot');
+        dotContainer.appendChild(dot);
+
+        setTimeout(() => dot.remove(), dotDuration);
+      }, i * delayBetweenDots);
+    }
+  }, 5500);
+
+
   // Get input values
   const cardNumber = document.getElementById('card-number').value;
   const name = document.getElementById('name').value;
@@ -23,6 +63,7 @@ document.getElementById('encrypt-button').addEventListener('click', async functi
 
   // Update output block
   outputElement = document.getElementById('output');
+  bankElement = document.getElementById('bank');
 
   //document.getElementById('passing-dots').style.display = "block";
 
@@ -39,6 +80,7 @@ document.getElementById('encrypt-button').addEventListener('click', async functi
   setTimeout(() => outputElement.appendChild(sentenceLine), 500);
   setTimeout(() => sentenceLine.textContent = "Requested message to encrypt:", 500);
   setTimeout(() => outputElement.appendChild(sentenceShortened), 500);
+
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   // Display the secret keys created by the user
@@ -59,7 +101,6 @@ document.getElementById('encrypt-button').addEventListener('click', async functi
 
   const secretKeys = await getPublicKeyData("SecretKeys")
   const secretKey1Shortened = createTruncatedTextElement(secretKeys.secret1, 35);
-  console.log(secretKeys.secret1)
   const secretKey2Shortened = createTruncatedTextElement(secretKeys.secret2, 35);
   const schnorrKeyShortened = createTruncatedTextElement(secretKeys.sch_key, 35);
 
@@ -71,7 +112,7 @@ document.getElementById('encrypt-button').addEventListener('click', async functi
   // Secret key 2:
   setTimeout(() => outputElement.appendChild(secretKey2Line), 2500);
   setTimeout(() => secretKey2Line.textContent = "Generated secret Key 2:", 2500);
-  setTimeout(() => outputElement.appendChild(secretKey2Shortened), 2500);  
+  setTimeout(() => outputElement.appendChild(secretKey2Shortened), 2500);
 
   // Schnorr key:
   setTimeout(() => outputElement.appendChild(schnorrKeyLine), 3500);
@@ -86,17 +127,16 @@ document.getElementById('encrypt-button').addEventListener('click', async functi
   encryptedMessageLine.style.margin = "5px";
   encryptedMessageLine.style.color = "green";
   encryptedMessageLine.style.textDecoration = "underline";
-  
+
   const encryptedMessage = await getPublicKeyData("EncryptedSentence")
   const encryptedMessageShortened = createTruncatedTextElement(encryptedMessage.EncryptedSentence.slice(3, encryptedMessage.EncryptedSentence.length - 2), 50);
-
 
   setTimeout(() => outputElement.appendChild(encryptedMessageLine), 4500);
   setTimeout(() => encryptedMessageLine.textContent = "Encrypted message:", 4500);
   setTimeout(() => outputElement.appendChild(encryptedMessageShortened), 4500);
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
+
   // Display the hash digest of the encrypted message
   const hashDigestLine = document.createElement('p');
   hashDigestLine.style.margin = "5px";
@@ -149,13 +189,233 @@ document.getElementById('encrypt-button').addEventListener('click', async functi
   setTimeout(() => publicKeyLine.textContent = "Public key used for the signature:", 8500);
   setTimeout(() => outputElement.appendChild(publicKeyShortened), 8500);
 
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  const blankLine = document.createElement('p');
+  blankLine.style.margin = "5px";
+  blankLine.style.color = "green";
+  blankLine.style.textDecoration = "underline";
+  blankLine.textContent = " ";
+
+  setTimeout(() => outputElement.appendChild(blankLine), 9000);
+
+  setTimeout(() => {
+    document.getElementById('bankButton').style.backgroundColor = "green";
+    document.getElementById('bankButton').textContent = "Send to Bank";
+  }, 9000);
 
 });
 
+// Send the encrypted message and the signature to the bank, with the public key
+document.getElementById('bankButton').addEventListener('click', async function () {
+
+  // Animation code:
+  const dotContainer = document.querySelector('.passing-dots2');
+  const dotCount = 6;
+  const dotDuration = 1000; // Each dot appears for 0.5 seconds
+  const delayBetweenDots = 150;
+  for (let i = dotCount; i > 0; i--) {
+    setTimeout(() => {
+      const dot = document.createElement('div');
+      dot.classList.add('dot');
+      dotContainer.appendChild(dot);
+
+      setTimeout(() => dot.remove(), dotDuration);
+    }, i * delayBetweenDots);
+  }
+
+  setTimeout(() => {
+    for (let i = dotCount; i > 0; i--) {
+      setTimeout(() => {
+        const dot = document.createElement('div');
+        dot.classList.add('dot');
+        dotContainer.appendChild(dot);
+
+        setTimeout(() => dot.remove(), dotDuration);
+      }, i * delayBetweenDots);
+    }
+  }, 2000);
+
+  const bankMessageLine = document.createElement('p');
+  bankMessageLine.style.margin = "5px";
+  bankMessageLine.style.color = "green";
+  bankMessageLine.style.textDecoration = "underline";
+
+  const encryptedMessage = await getPublicKeyData("EncryptedSentence")
+  const encryptedMessageShortened = createTruncatedTextElement(encryptedMessage.EncryptedSentence.slice(3, encryptedMessage.EncryptedSentence.length - 2), 50);
+
+
+  setTimeout(() => bankElement.appendChild(bankMessageLine), 500);
+  setTimeout(() => bankMessageLine.textContent = "Message received:", 500);
+  setTimeout(() => bankElement.appendChild(encryptedMessageShortened), 500);
+
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  // Display the signature received from the user
+
+  const signatureReceivedLine = document.createElement('p');
+  signatureReceivedLine.style.margin = "5px";
+  signatureReceivedLine.style.color = "green";
+  signatureReceivedLine.style.textDecoration = "underline";
+
+  const signatureReceived = await getPublicKeyData("Schnorr_sign_via_private_key")
+  const signatureReceivedShortened = createTruncatedTextElement(signatureReceived.Signature, 35);
+
+  setTimeout(() => bankElement.appendChild(signatureReceivedLine), 1500);
+  setTimeout(() => signatureReceivedLine.textContent = "Signature received:", 1500);
+  setTimeout(() => bankElement.appendChild(signatureReceivedShortened), 1500);
+
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  // Display the public key received from the user
+  const publicKeyReceivedLine = document.createElement('p');
+  publicKeyReceivedLine.style.margin = "5px";
+  publicKeyReceivedLine.style.color = "green";
+  publicKeyReceivedLine.style.textDecoration = "underline";
+
+  const publicKey = await getPublicKeyData("Public_Key")
+  const publicKeyShortened = createTruncatedTextElement(publicKey.public_key, 35);
+
+  setTimeout(() => bankElement.appendChild(publicKeyReceivedLine), 2500);
+  setTimeout(() => publicKeyReceivedLine.textContent = "Public key received:", 2500);
+  setTimeout(() => bankElement.appendChild(publicKeyShortened), 2500);
+
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  // Decode the encrypted message using the public key and verify the signature
+  const decodedMessageLine = document.createElement('p');
+  decodedMessageLine.style.margin = "5px";
+  decodedMessageLine.style.color = "green";
+  decodedMessageLine.style.textDecoration = "underline";
+
+  const decodedMessage = await getPublicKeyData("SentenceToSend")
+  const decodedMessageShortened = createTruncatedTextElement(decodedMessage.sentence, 50);
+
+  const checkingSignature = createTruncatedTextElement("Checking signature...", 50);
+  const preparingPublicKey = createTruncatedTextElement("Preparing public key...", 50);
+  const decryptingMessage = createTruncatedTextElement("Decrypting message...", 50);
+  const success = createTruncatedTextElement("Success!", 50);
+  success.style.color = "green";
+
+  setTimeout(() => bankElement.appendChild(checkingSignature), 3500);
+  setTimeout(() => bankElement.appendChild(preparingPublicKey), 4500);
+  setTimeout(() => bankElement.appendChild(decryptingMessage), 5500);
+  setTimeout(() => bankElement.appendChild(success), 6500);
+
+
+  setTimeout(() => bankElement.appendChild(decodedMessageLine), 7000);
+  setTimeout(() => decodedMessageLine.textContent = "Decoded message:", 7000);
+  setTimeout(() => bankElement.appendChild(decodedMessageShortened), 7000);
+
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  setTimeout(() => {
+    document.getElementById('successButton').style.backgroundColor = "blue";
+    document.getElementById('successButton').textContent = "Send \"Success\" to User";
+  }, 7500);
+
+  // Send an encoded "Success" message to the user
+  const successMessageLine = document.createElement('p');
+  successMessageLine.style.margin = "5px";
+  successMessageLine.style.color = "red";
+
+  document.getElementById('bankButton').classList.add('sendToUser');
+});
+
+
+document.getElementById('successButton').addEventListener('click', async function () {
+  // Clear output block
+  while (document.getElementById('output').firstChild) {
+    document.getElementById('output').removeChild(document.getElementById('output').firstChild);
+  }
+
+  document.getElementById('bankButton').style.backgroundColor = "transparent";
+  document.getElementById('bankButton').textContent = "";
+
+  // Animation code:
+  const dotContainer = document.querySelector('.passing-dots2');
+  const dotCount = 6;
+  const dotDuration = 1000; // Each dot appears for 0.5 seconds
+  const delayBetweenDots = 150;
+  for (let i = dotCount; i > 0; i--) {
+    setTimeout(() => {
+      const dot = document.createElement('div');
+      dot.classList.add('dot');
+      dotContainer.appendChild(dot);
+
+      setTimeout(() => dot.remove(), dotDuration);
+    }, i * delayBetweenDots);
+  }
+
+  setTimeout(() => {
+    for (let i = dotCount; i > 0; i--) {
+      setTimeout(() => {
+        const dot = document.createElement('div');
+        dot.classList.add('dot');
+        dotContainer.appendChild(dot);
+
+        setTimeout(() => dot.remove(), dotDuration);
+      }, i * delayBetweenDots);
+    }
+  }, 2000);
+
+  const encryptionSuccessMessageLine = document.createElement('p');
+  encryptionSuccessMessageLine.style.margin = "5px";
+  encryptionSuccessMessageLine.style.color = "green";
+
+  setTimeout(() => document.getElementById('output').appendChild(encryptionSuccessMessageLine), 500);
+  setTimeout(() => encryptionSuccessMessageLine.textContent = "Encoding \"Success\" message to user", 500);
+
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  // Encrypt the "Success" message using the public key, and send it to the user
+  const encryptingMessage = createTruncatedTextElement("Encrypted message:", 50);
+  const encryptedSuccess = createTruncatedTextElement("SOME ENCRYPTED MESSAGE !@$!@#$#$ygheatr", 50);
+  encryptingMessage.style.color = "green";
+
+  setTimeout(() => document.getElementById('output').appendChild(encryptingMessage), 1500);
+  setTimeout(() => document.getElementById('output').appendChild(encryptedSuccess), 1500);
+
+  // Send the encoded "Success" message to the user
+  const successMessageLine = document.createElement('p');
+  successMessageLine.style.margin = "5px";
+  successMessageLine.style.color = "green";
+  successMessageLine.style.textDecoration = "underline";
+
+  setTimeout(() => document.getElementById('output').appendChild(successMessageLine), 2500);
+
+  setTimeout(() => {
+    document.getElementById("sendToUser").style.backgroundColor = "green";
+    document.getElementById("sendToUser").textContent = "Send to User";
+  }, 3500);
+
+});
+
+document.getElementById("sendToUser").addEventListener('click', async function () {
+  // Animation code:
+  const dotContainer = document.querySelector('.passing-dots1');
+  const dotCount = 6;
+  const dotDuration = 1000; // Each dot appears for 0.5 seconds
+  const delayBetweenDots = 150;
+  for (let i = dotCount; i > 0; i--) {
+    setTimeout(() => {
+      const dot = document.createElement('div');
+      dot.classList.add('dot');
+      dotContainer.appendChild(dot);
+
+      setTimeout(() => dot.remove(), dotDuration);
+    }, i * delayBetweenDots);
+  }
+
+  const userMessageLine = document.createElement('p');
+  userMessageLine.style.margin = "5px";
+  userMessageLine.style.color = "green";
+
+  setTimeout(() => document.getElementById('user').appendChild(userMessageLine), 500);
+  setTimeout(() => userMessageLine.textContent = "Successfully paid!", 1500);
+
+});
 
 async function getPublicKeyData(fileName) {
-
   fileName = './JSONFiles/' + fileName + ".json";
   try {
     const response = await fetch(fileName);
@@ -167,7 +427,7 @@ async function getPublicKeyData(fileName) {
   }
 }
 
-function createTruncatedTextElement(text, maxLength ) {
+function createTruncatedTextElement(text, maxLength) {
   const span = document.createElement('p');
   span.style.margin = "5px";
   shortenedText = createShortText(text, maxLength);
@@ -180,7 +440,6 @@ function createTruncatedTextElement(text, maxLength ) {
   else {
     span.textContent = text;
   }
-
   return span;
 }
 

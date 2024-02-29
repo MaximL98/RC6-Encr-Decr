@@ -13,7 +13,7 @@ From Rotem :
 - Weak keys? other security issues?
 """
 
-JSONfilenameArray = ["SentenceToSend", "SecretKeys", "EncryptedSentence", "Schnorr_get_message_digest", "Schnorr_sign_via_private_key", "Public_Key"]
+JSONfilenameArray = ["SentenceToSend", "SecretKeys", "EncryptedSentence", "Schnorr_get_message_digest", "Schnorr_sign_via_private_key", "Public_Key", "DecryptedSentence"]
 
 # split message to 128 bits blocks
 def split_sentence(sentence):
@@ -142,6 +142,7 @@ def rotems_main_verbose():
                     file=sys.stderr)
             exit(-1)
         print("\nDecrypted:\t", decrypted_text)
+        createJSONFile({"DecryptedSentence": decrypted_text}, 6)
 
     else:
         print("I dont know you, you are not the original user!")
