@@ -1,10 +1,10 @@
 import sqlite3
-from sqlite3 import Error
+from sqlite3 import Error, Connection
 
 import hashlib
 
 # Function to create a database connection
-def create_connection(db_file="users_data.db"):
+def create_connection(db_file="users_data.db") -> Connection:
     """Creates a database connection to the SQLite database specified by db_file.
     Args:
         db_file (str, optional): The name of the database file. Defaults to "users_data.db".
@@ -93,7 +93,7 @@ def main():
     # Establish database connection
     conn = create_connection()
 
-    #cur = conn.cursor()
+    # cur = conn.cursor()
     #cur.execute("DROP TABLE IF EXISTS user_data")
     #create_table(conn)
 
