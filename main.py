@@ -13,6 +13,7 @@ From Rotem :
 - Weak keys? other security issues?
 """
 
+JSONfilenameArray = ["SentenceToSend", "SecretKeys", "EncryptedSentence", "Schnorr_get_message_digest", "Schnorr_sign_via_private_key", "Public_Keys"]
 
 # split message to 128 bits blocks
 def split_sentence(sentence):
@@ -27,7 +28,7 @@ def split_sentence(sentence):
 def createJSONFile(dictionary, index):
     # Create a JSON file to store the keys
     
-    jsonFileName = JSONfilenameArray[index] + ".json"
+    jsonFileName = "./JSONFiles/" + JSONfilenameArray[index] + ".json"
     
     json_object = json.dumps(dictionary, indent = 4)
     
