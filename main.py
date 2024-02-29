@@ -1,6 +1,7 @@
 import sys
 
 import db_control
+import db_control
 from rc6_encr_decr import *
 from dh_key_gen import *
 
@@ -11,8 +12,6 @@ From Rotem :
 - Check if our keys are defined properly (we use the key from DH in RC6)
 - Weak keys? other security issues?
 """
-
-JSONfilenameArray = ["SentenceToSend", "SecretKeys", "EncryptedSentence", "Signature", "DecryptedSentence", "VerificationResult", "EncryptedString"]   
 
 
 # split message to 128 bits blocks
@@ -138,7 +137,7 @@ def rotems_main_verbose():
             assert decrypted_text[:len(sentence)] == sentence
         except AssertionError:
             print(f"ERROR - encryption-decryption process failed!\nsrc: {sentence}\ndest: {decrypted_text}",
-                  file=sys.stderr)
+                    file=sys.stderr)
             exit(-1)
         print("\nDecrypted:\t", decrypted_text)
 
@@ -149,6 +148,7 @@ def rotems_main_verbose():
     # 1. Bank will carry out the cmd (if legal cmd)
     # 2. Will send back (encr?) msg that cmd was completed successfully
     ## END?
+
 
 
 if __name__ == "__main__":
