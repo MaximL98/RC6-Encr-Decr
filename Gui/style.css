@@ -18,8 +18,11 @@ body {
     background-color: #333; /* Slightly lighter background for blocks */
     padding: 30px;
     border-radius: 8px; 
-    margin: 100px;
-    height: 400px;
+    margin-left: 100px;
+    margin-right: 100px;
+    margin-top: 0px;
+    margin-bottom: 0px;
+    height: 800px;
     width: 400px;
 }
 
@@ -27,13 +30,32 @@ h2 {
     margin-bottom: 15px;
 }
 
-.input-block, .output-block {
-    padding: 20px;
+.input-block {
+    padding: 10px;
     margin-bottom: 20px; /* Add spacing between blocks */
     width: 100%; 
+    max-width: 500px; /* Limit the width for a contained look */
+    text-align: center; /* Center content within blocks */
+}
+
+.info-block {
+    height: 1000px;
+    margin-bottom: 20px; /* Add spacing between blocks */
+    width: 500px; 
+    max-width: 500px; /* Limit the width for a contained look */
+    text-align: center; /* Center content within blocks */
+}
+
+.output-block {
+    height: 1000px;
+
+    padding: 10px;
+    margin-bottom: 20px; /* Add spacing between blocks */
+    width: 500px; 
     max-width: 400px; /* Limit the width for a contained look */
     text-align: center; /* Center content within blocks */
 }
+
 
 input[type="text"], input[type="password"] {
     width: 100%;
@@ -52,4 +74,12 @@ button {
     padding: 12px 20px;
     cursor: pointer;
     border-radius: 4px;
+}
+
+.passing-dots {
+    display: flex;
+    justify-content: space-between;
+    flex-direction: row;
+    width: 100px;
+    margin: 0 auto;
 }

@@ -13,7 +13,7 @@ From Rotem :
 - Weak keys? other security issues?
 """
 
-JSONfilenameArray = ["SentenceToSend", "SecretKeys", "EncryptedSentence", "Schnorr_get_message_digest", "Schnorr_sign_via_private_key", "Public_Keys"]
+JSONfilenameArray = ["SentenceToSend", "SecretKeys", "EncryptedSentence", "Schnorr_get_message_digest", "Schnorr_sign_via_private_key", "Public_Key"]
 
 # split message to 128 bits blocks
 def split_sentence(sentence):
@@ -28,7 +28,7 @@ def split_sentence(sentence):
 def createJSONFile(dictionary, index):
     # Create a JSON file to store the keys
     
-    jsonFileName = "./JSONFiles/" + JSONfilenameArray[index] + ".json"
+    jsonFileName = "./Gui/JSONFiles/" + JSONfilenameArray[index] + ".json"
     
     json_object = json.dumps(dictionary, indent = 4)
     
@@ -63,7 +63,7 @@ def rotems_main_verbose():
     sch_key = schnorr_lib.sch_key_gen()
     
     ##############################################GUI################################################
-    dict = {"secret1": secret1, "secret2": secret2, "sch_key": sch_key}
+    dict = {"secret1": str(secret1), "secret2": str(secret2), "sch_key": str(sch_key)}
     createJSONFile(dict, 1)
     ##############################################GUI################################################
 
@@ -74,7 +74,8 @@ def rotems_main_verbose():
     e_whole_sentence, encrypted_blocks = encrypt_many_single_key(lst_of_sentences, secret1)
     
     ##############################################GUI################################################
-    dict = {"EncryptedSentence": e_whole_sentence, "EncryptedBlocks": encrypted_blocks}
+    
+    dict = {"EncryptedSentence": f"`{e_whole_sentence.encode()}`", "EncryptedBlocks": encrypted_blocks}
     createJSONFile(dict, 2)
     ##############################################GUI################################################
 
