@@ -10,28 +10,6 @@ import schnorr_lib
 # import prime_helpers
 from constants import *
 
-"""
-From Rotem :
-Now prime and generator are both given, and keys are randomly generated in range of prime // 2 to prime (roughly).
-TODO - define proper process to weed out weak keys.
-
-from Rotem new:
-Schnorr signature now (probably) works, I changed the following
-- changed the original encryption prime to the one in schnorr-lib, and set the generator to 3 (as it is).
-- the signature is calculated over the digest (by the sender), using the same private key as the one he used to 
-encrpyt the message (maybe this is not ideal?)
-- the signature is then generated
-- the verification process required a proper public key, NOT P (not the prime!), but the output of the
-"pubkey_gen_from_hex(private_key)" function! (you could use the int variant but since we convert to hex 
-during the signing process I just called this one.
-- Now, call verify as such: schnorr_verify(digest, public_key, sig) and get True since the math does work
-
-Our mistake was using improper public key.
-Maybe my mistake now is to use the same keyspace for all 3 components (DH, RC6 and Schnorr) but that's TBDiscussed.
-Enjoy.
-
-"""
-
 # attempt to generalize block and key sizes for RC6:
 INPUT_SIZE_BITS = 2048
 INPUT_SIZE_BYTES = INPUT_SIZE_BITS // 8
@@ -131,8 +109,8 @@ def encrypt(sentence, secret):
     # changed to 2048 bits
     and_modulo = (2 ** BLOCK_SIZE_BITS) - 1
     lgw = LOG_BLOCK_SIZE_BITS
-    B = (B + secret) & and_modulo
-    D = (D + secret) & and_modulo
+    B = (B + secret[0]) & and_modulo
+    D = (D + secret[1]) & and_modulo
     for i in range(1, r + 1):
         t_temp = (B * (2 * B + 1)) & and_modulo
         # 32 and 31 respectively changed to 512 511
@@ -141,11 +119,11 @@ def encrypt(sentence, secret):
         u = ROL(u_temp, lgw, BLOCK_SIZE_BITS)
         tmod = t & (BLOCK_SIZE_BITS - 1)
         umod = u & (BLOCK_SIZE_BITS - 1)
-        A = (ROL(A ^ t, umod, BLOCK_SIZE_BITS) + secret) & and_modulo
-        C = (ROL(C ^ u, tmod, BLOCK_SIZE_BITS) + secret) & and_modulo
+        A = (ROL(A ^ t, umod, BLOCK_SIZE_BITS) + secret[2*i]) & and_modulo
+        C = (ROL(C ^ u, tmod, BLOCK_SIZE_BITS) + secret[2*i+1]) & and_modulo
         (A, B, C, D) = (B, C, D, A)
-    A = (A + secret) & and_modulo
-    C = (C + secret) & and_modulo
+    A = (A + secret[2*r+2]) & and_modulo
+    C = (C + secret[2*r+3]) & and_modulo
     cipher = [A, B, C, D]
     return orgi, cipher
 
@@ -162,20 +140,21 @@ def decrypt(esentence, secret):
     and_modulo = (2 ** BLOCK_SIZE_BITS) - 1
     # forgot to modify lgw, it needs to be log2(blocksize) = log2(512)=9
     lgw = LOG_BLOCK_SIZE_BITS
-    C = (C - secret) & and_modulo
-    A = (A - secret) & and_modulo
+    C = (C - secret[2*r+3]) & and_modulo
+    A = (A - secret[2*r+2]) & and_modulo
     for j in range(1, r + 1):
+        i=r+1-j
         (A, B, C, D) = (D, A, B, C)
         u_temp = (D * (2 * D + 1)) & and_modulo
         u = ROL(u_temp, lgw, BLOCK_SIZE_BITS)
         t_temp = (B * (2 * B + 1)) & and_modulo
         t = ROL(t_temp, lgw, BLOCK_SIZE_BITS)
-        tmod = t & (BLOCK_SIZE_BITS-1)
-        umod = u & (BLOCK_SIZE_BITS-1)
-        C = (ROR((C - secret) & and_modulo, tmod, BLOCK_SIZE_BITS) ^ u)
-        A = (ROR((A - secret) & and_modulo, umod, BLOCK_SIZE_BITS) ^ t)
-    D = (D - secret) & and_modulo
-    B = (B - secret) & and_modulo
+        tmod = t & (BLOCK_SIZE_BITS - 1)
+        umod = u & (BLOCK_SIZE_BITS - 1)
+        C = (ROR((C - secret[2*i+1]) & and_modulo, tmod, BLOCK_SIZE_BITS) ^ u)
+        A = (ROR((A - secret[2*i]) & and_modulo, umod, BLOCK_SIZE_BITS) ^ t)
+    D = (D - secret[1]) & and_modulo
+    B = (B - secret[0]) & and_modulo
     orgi = [A, B, C, D]
     return cipher, orgi
 
@@ -197,6 +176,33 @@ def encrypt_many_single_key(lst_of_sentences, key):
         e_whole_sentence += esentence
         encrypted_blocks.append(esentence)
     return e_whole_sentence, encrypted_blocks
+
+
+def gen_rc6_key(uk):
+    r = 12
+    w = 32
+    b = len(uk)
+    modulo = 2 ** 32
+    s = (2 * r + 4) * [0]
+    s[0] = 0xB7E15163
+    for i in range(1, 2 * r + 4):
+        s[i] = (s[i - 1] + 0x9E3779B9) % (2 ** w)
+    encoded = blockConverter(uk)
+    # print encoded
+    enlength = len(encoded)
+    l = enlength * [0]
+    for i in range(1, enlength + 1):
+        l[enlength - i] = int(encoded[i - 1], 2)
+
+    v = 3 * max(enlength, 2 * r + 4)
+    A = B = i = j = 0
+
+    for index in range(0, v):
+        A = s[i] = ROL((s[i] + A + B) % modulo, 3, 32)
+        B = l[j] = ROL((l[j] + A + B) % modulo, (A + B) % 32, 32)
+        i = (i + 1) % (2 * r + 4)
+        j = (j + 1) % enlength
+    return s
 
 
 def rotems_main_verbose():
@@ -226,6 +232,7 @@ def rotems_main_verbose():
     Encrypt input
     """
     # for debug     , for decryption / to send
+    secret1 = gen_rc6_key(str(secret1))
     e_whole_sentence, encrypted_blocks = encrypt_many_single_key(lst_of_sentences, secret1)
 
     """
@@ -264,6 +271,7 @@ def rotems_main_verbose():
     """
     Decrypt message
     """
+    secret2 = gen_rc6_key(str(secret2))
     decrypted_text = decrypt_many_single_key(encrypted_blocks, secret2)
     try:
         assert decrypted_text[:len(sentence)] == sentence
