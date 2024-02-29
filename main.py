@@ -1,33 +1,19 @@
 import sys
-# hash imports
-import hashlib
 
-# import prime_helpers
-from constants import *
+import db_control
 from rc6_encr_decr import *
 from dh_key_gen import *
-#from schnorr_lib import *
+
+import json
+
 """
 From Rotem :
-Now prime and generator are both given, and keys are randomly generated in range of prime // 2 to prime (roughly).
-TODO - define proper process to weed out weak keys.
-
-from Rotem new:
-Schnorr signature now (probably) works, I changed the following
-- changed the original encryption prime to the one in schnorr-lib, and set the generator to 3 (as it is).
-- the signature is calculated over the digest (by the sender), using the same private key as the one he used to 
-encrpyt the message (maybe this is not ideal?)
-- the signature is then generated
-- the verification process required a proper public key, NOT P (not the prime!), but the output of the
-"pubkey_gen_from_hex(private_key)" function! (you could use the int variant but since we convert to hex 
-during the signing process I just called this one.
-- Now, call verify as such: schnorr_verify(digest, public_key, sig) and get True since the math does work
-
-Our mistake was using improper public key.
-Maybe my mistake now is to use the same keyspace for all 3 components (DH, RC6 and Schnorr) but that's TBDiscussed.
-Enjoy.
-
+- Check if our keys are defined properly (we use the key from DH in RC6)
+- Weak keys? other security issues?
 """
+
+JSONfilenameArray = ["SentenceToSend", "SecretKeys", "EncryptedSentence", "Signature", "DecryptedSentence", "VerificationResult", "EncryptedString"]   
+
 
 # split message to 128 bits blocks
 def split_sentence(sentence):
@@ -38,7 +24,17 @@ def split_sentence(sentence):
     print(f'Input:\t {sentence}')
     return lst_of_sentences
 
-
+# Create a JSON file to store the information as strings, for the sake of clean presentation
+def createJSONFile(dictionary, index):
+    # Create a JSON file to store the keys
+    
+    jsonFileName = JSONfilenameArray[index] + ".json"
+    
+    json_object = json.dumps(dictionary, indent = 4)
+    
+    with open(jsonFileName, 'w') as outfile:
+        outfile.write(json_object)
+       
 
 def rotems_main_verbose():
     # encrypt-decrypt a block of blocks
@@ -54,34 +50,66 @@ def rotems_main_verbose():
     sentence = input("Enter Sentence: ")
     lst_of_sentences = split_sentence(sentence)
     ## Cmd will be encr + sig and sent to BANK:
+    
+    ##############################################GUI################################################
+    dict = {"sentence": sentence}
+    createJSONFile(dict, 0)
+    ##############################################GUI################################################
 
     # generate keys for encryption (over the large prime field chosen in "constants.py")
     secret1, secret2 = generateKeys()
 
     # generate the Schnorr key (over the prime field defined in schnorr lib)
     sch_key = schnorr_lib.sch_key_gen()
+    
+    ##############################################GUI################################################
+    dict = {"secret1": secret1, "secret2": secret2, "sch_key": sch_key}
+    createJSONFile(dict, 1)
+    ##############################################GUI################################################
 
     """
     Encrypt input
     """
     # for debug     , for decryption / to send
     e_whole_sentence, encrypted_blocks = encrypt_many_single_key(lst_of_sentences, secret1)
+    
+    ##############################################GUI################################################
+    dict = {"EncryptedSentence": e_whole_sentence, "EncryptedBlocks": encrypted_blocks}
+    createJSONFile(dict, 2)
+    ##############################################GUI################################################
 
     """
     Schnorr sig get original message digest
     """
     message_hash_digest = schnorr_lib.msg_hash_digest(sentence)
     private_key_as_hex_string = schnorr_lib.get_hex_private_key(sch_key)
+    
+    
+    
+    ##############################################GUI################################################
+    dict = {"message_hash_digest": message_hash_digest.hex(), "private_key_as_hex_string": private_key_as_hex_string}
+    createJSONFile(dict, 3)
+    ##############################################GUI################################################
 
     """
     Sign message using Schnorr signature via private key (private_key_1)
     """
     sig = schnorr_lib.schnorr_sign(message_hash_digest, private_key_as_hex_string)
     print(f"Signature: {sig.hex()}")
+    
+    ##############################################GUI################################################
+    dict = {"Signature": sig.hex()}
+    createJSONFile(dict, 4)
+    ##############################################GUI################################################
+    
     """
     Generate public key PROPERLY to with message
     """
     public_key = schnorr_lib.pubkey_gen_from_hex(private_key_as_hex_string)
+    ##############################################GUI################################################
+    dict = {"public_key": public_key.hex()}
+    createJSONFile(dict, 5)
+    ##############################################GUI################################################
 
     ### END OF USER SIDE, cmd now been sent to BANK
 
@@ -110,7 +138,7 @@ def rotems_main_verbose():
             assert decrypted_text[:len(sentence)] == sentence
         except AssertionError:
             print(f"ERROR - encryption-decryption process failed!\nsrc: {sentence}\ndest: {decrypted_text}",
-                file=sys.stderr)
+                  file=sys.stderr)
             exit(-1)
         print("\nDecrypted:\t", decrypted_text)
 
@@ -122,7 +150,6 @@ def rotems_main_verbose():
     # 2. Will send back (encr?) msg that cmd was completed successfully
     ## END?
 
-    
 
 if __name__ == "__main__":
     # now calling my main (verbose)

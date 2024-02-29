@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cryptology Project</title>
+    <link rel="stylesheet" href="style.css"> 
+</head>
+<body>
+    <div class="container">
+        <div class="input-block">
+            <h2>Card Details</h2>
+            <label for="card-number">Card Number:</label>
+            <input type="text" id="card-number"><br>
+
+            <label for="name">Name:</label>
+            <input type="text" id="name"><br>
+
+            <label for="passcode">Passcode:</label>
+            <input type="password" id="passcode"><br>
+
+            <label for="cvc">CVC:</label>
+            <input type="text" id="cvc"><br>            
+
+            <button id="encrypt-button">Encrypt and Send</button>
+        </div>
+
+        
+    </div>
+
+    <div class="container">
+        <div class="info-block">
+            <h2>Sent data (encrypted)</h2>
+            <div id="output"></div>
+        </div>      
+    </div>
+
+    <div class="container">
+        <div class="output-block">
+            <h2>Bank</h2>
+            <div id="output"></div>
+        </div>
+
+        
+    </div>
+
+    
+
+    
+
+    <script src="index.js"></script>
+</body>
+</html>
