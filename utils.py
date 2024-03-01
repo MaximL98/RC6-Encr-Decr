@@ -14,3 +14,18 @@ def print_fails(*values):
 
 def print_success(*values):
     print(bcolors.OKGREEN+ " ".join(map(str,values))+bcolors.ENDC)
+
+
+def get_user_info():
+    print("Welcome To Our Payment secution")
+    first_name = input("Enter first name: ")
+    last_name = input("Enter last name: ")
+    card_number = input("Enter card number: ")
+    return first_name, last_name, card_number
+
+def get_cred(first_name, last_name):
+    print(f"Hello {last_name} {first_name} ")
+    passcode = input("Enter passcode (4 numbers): ")
+    cvc = input("Enter cvc (3 numbers): ")
+    data = input("Enter exp card date (m/y): ")
+    return passcode, cvc, data
