@@ -1,7 +1,8 @@
 import sqlite3
 from sqlite3 import Error, Connection
-
 import hashlib
+
+import utils
 
 # Function to create a database connection
 def create_connection(db_file="users_data.db") -> Connection:
@@ -82,6 +83,40 @@ def select_passcode(conn, card_number):
     cur.execute(sql, (card_number,))
     passcode = cur.fetchone()  # Fetch the first row
     return passcode[0] if passcode else None
+
+def check_exist():
+    sql =  """SELECT EXISTS(
+    SELECT 1 FROM user_data
+    WHERE First_Name = ?
+    AND Last_Name = ?
+    AND Card_Number = ?
+    ) AS UserExists;"""
+
+    first_name, last_name, card_num = utils.get_user_info()
+
+    conn = create_connection()
+    cur = conn.cursor()
+    cur.execute(sql, (first_name, last_name, card_num,))
+    result = cur.fetchone()
+    conn.close()
+    return result[0], first_name, last_name
+
+def check_cred(first_name, last_name):
+    sql =  """SELECT EXISTS(
+    SELECT 1 FROM user_data
+    WHERE Passcode = ?
+    AND CVC = ?
+    AND Date = ?
+    ) AS UserExists;"""
+
+    passcode, cvc, data = utils.get_cred(first_name, last_name)
+    hashed_pass = hash_func(passcode)
+    conn = create_connection()
+    cur = conn.cursor()
+    cur.execute(sql, (hashed_pass, cvc, data,))
+    result = cur.fetchone()
+    conn.close()
+    return result[0]
 
 # Function to hash a passcode using SHA-256
 def hash_func(passcode):
