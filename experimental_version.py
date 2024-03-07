@@ -9,6 +9,25 @@ import schnorr_lib
 
 # import prime_helpers
 from constants import *
+import sympy
+
+USE_MULTIPRIME = 0
+PRIME_COUNT = 4 if USE_MULTIPRIME else 2
+p1 = sympy.nextprime(2 ** 6)
+primes = [p1]
+for _ in range(PRIME_COUNT - 1):
+    primes.append(sympy.nextprime(primes[-1] + 1))
+import tqdm
+
+# test ignore
+n = 1
+for i in range(PRIME_COUNT):
+    n *= primes[i]
+k = random.randint(primes[0] + 1, primes[-1] - 1) % n
+count = sum([1 if (pow(i, k, n) == i) else 0 for i in tqdm.tqdm(range(2**20))])
+print(f"Unhidden messages: {count}")
+exit()
+# end test end ignore
 
 # attempt to generalize block and key sizes for RC6:
 INPUT_SIZE_BITS = 2048
@@ -119,11 +138,11 @@ def encrypt(sentence, secret):
         u = ROL(u_temp, lgw, BLOCK_SIZE_BITS)
         tmod = t & (BLOCK_SIZE_BITS - 1)
         umod = u & (BLOCK_SIZE_BITS - 1)
-        A = (ROL(A ^ t, umod, BLOCK_SIZE_BITS) + secret[2*i]) & and_modulo
-        C = (ROL(C ^ u, tmod, BLOCK_SIZE_BITS) + secret[2*i+1]) & and_modulo
+        A = (ROL(A ^ t, umod, BLOCK_SIZE_BITS) + secret[2 * i]) & and_modulo
+        C = (ROL(C ^ u, tmod, BLOCK_SIZE_BITS) + secret[2 * i + 1]) & and_modulo
         (A, B, C, D) = (B, C, D, A)
-    A = (A + secret[2*r+2]) & and_modulo
-    C = (C + secret[2*r+3]) & and_modulo
+    A = (A + secret[2 * r + 2]) & and_modulo
+    C = (C + secret[2 * r + 3]) & and_modulo
     cipher = [A, B, C, D]
     return orgi, cipher
 
@@ -140,10 +159,10 @@ def decrypt(esentence, secret):
     and_modulo = (2 ** BLOCK_SIZE_BITS) - 1
     # forgot to modify lgw, it needs to be log2(blocksize) = log2(512)=9
     lgw = LOG_BLOCK_SIZE_BITS
-    C = (C - secret[2*r+3]) & and_modulo
-    A = (A - secret[2*r+2]) & and_modulo
+    C = (C - secret[2 * r + 3]) & and_modulo
+    A = (A - secret[2 * r + 2]) & and_modulo
     for j in range(1, r + 1):
-        i=r+1-j
+        i = r + 1 - j
         (A, B, C, D) = (D, A, B, C)
         u_temp = (D * (2 * D + 1)) & and_modulo
         u = ROL(u_temp, lgw, BLOCK_SIZE_BITS)
@@ -151,8 +170,8 @@ def decrypt(esentence, secret):
         t = ROL(t_temp, lgw, BLOCK_SIZE_BITS)
         tmod = t & (BLOCK_SIZE_BITS - 1)
         umod = u & (BLOCK_SIZE_BITS - 1)
-        C = (ROR((C - secret[2*i+1]) & and_modulo, tmod, BLOCK_SIZE_BITS) ^ u)
-        A = (ROR((A - secret[2*i]) & and_modulo, umod, BLOCK_SIZE_BITS) ^ t)
+        C = (ROR((C - secret[2 * i + 1]) & and_modulo, tmod, BLOCK_SIZE_BITS) ^ u)
+        A = (ROR((A - secret[2 * i]) & and_modulo, umod, BLOCK_SIZE_BITS) ^ t)
     D = (D - secret[1]) & and_modulo
     B = (B - secret[0]) & and_modulo
     orgi = [A, B, C, D]

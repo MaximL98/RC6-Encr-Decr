@@ -36,20 +36,37 @@ def createJSONFile(dictionary, index):
 
 def sign_dh_keys():
     # generate keys for encryption (over the large prime field chosen in "constants.py")
-    secret1, secret2 = generateKeys()
-    
+    # From Rotem:
+    """
+    I assume this next line is supposed to be the safe-channel, as in the operation where the user
+    and the bank swap the DH keys, since this is the only call in the file.
+    I hope you didn't delete it as the file changed drastically.
+    """
+    # secret1, secret2 = generateKeys()
+    # user generates random key
+    user_private_key = generateDiffieHellmanPrivateKey()
+    # user calculates public key
+    user_pub_key = generateDiffieHellmanPublicKey(user_private_key)
+    # bank sends public key to user (we keep bank private key here since we have no real server)
+    bank_private_key, bank_public_key = sendDiffieHellmanPublicKeyToUser()
+    # simulates the fact that now both bank and user have the dh key
+    bank_diffie_hellman_key = user_diffie_hellman_key = pow(bank_public_key, user_private_key, PRIME)
+    validated = validateDiffieHellmanKey(user_diffie_hellman_key, bank_private_key, user_pub_key)
+    if not validated:
+        print(f"Error! Failed to create user-bank secure channel, DH keys are not equal", file=sys.stderr)
+        exit(-1)
 
     sch_key_for_key = schnorr_lib.sch_key_gen()
-    pk_hash_digest = schnorr_lib.msg_hash_digest(str(secret1))
+    pk_hash_digest = schnorr_lib.msg_hash_digest(str(user_diffie_hellman_key))
     private_key_as_hex_string_for_key = schnorr_lib.get_hex_private_key(sch_key_for_key)
     sig = schnorr_lib.schnorr_sign(pk_hash_digest, private_key_as_hex_string_for_key)
     public_key_dh = schnorr_lib.pubkey_gen_from_hex(private_key_as_hex_string_for_key)
     ### @ ME (maxim)
     ##############################################GUI################################################
-    dict = {"secret1": str(secret1), "secret2": str(secret2), "sch_key": str(sch_key_for_key)}
+    dict = {"secret1": str(user_diffie_hellman_key), "secret2": str(bank_diffie_hellman_key), "sch_key": str(sch_key_for_key)}
     createJSONFile(dict, 1)
     ##############################################GUI################################################
-    return secret1, sig, pk_hash_digest, public_key_dh
+    return user_diffie_hellman_key, sig, pk_hash_digest, public_key_dh
 
 def check_dh_key_sign(pk_hash_digest, public_key, sig_for_key):
     return schnorr_lib.schnorr_verify(pk_hash_digest, public_key, sig_for_key)
