@@ -34,8 +34,29 @@ def createJSONFile(dictionary, index):
     with open(jsonFileName, 'w') as outfile:
         outfile.write(json_object)
 
+def sign_dh_keys():
+    # generate keys for encryption (over the large prime field chosen in "constants.py")
+    secret1, secret2 = generateKeys()
+    
+
+    sch_key_for_key = schnorr_lib.sch_key_gen()
+    pk_hash_digest = schnorr_lib.msg_hash_digest(str(secret1))
+    private_key_as_hex_string_for_key = schnorr_lib.get_hex_private_key(sch_key_for_key)
+    sig = schnorr_lib.schnorr_sign(pk_hash_digest, private_key_as_hex_string_for_key)
+    public_key_dh = schnorr_lib.pubkey_gen_from_hex(private_key_as_hex_string_for_key)
+    ### @ ME (maxim)
+    ##############################################GUI################################################
+    dict = {"secret1": str(secret1), "secret2": str(secret2), "sch_key": str(sch_key_for_key)}
+    createJSONFile(dict, 1)
+    ##############################################GUI################################################
+    return secret1, sig, pk_hash_digest, public_key_dh
+
+def check_dh_key_sign(pk_hash_digest, public_key, sig_for_key):
+    return schnorr_lib.schnorr_verify(pk_hash_digest, public_key, sig_for_key)
+    
+
 # Moved encr + sig logic from main into function to avoid code duplication 
-def send_encr_msg(sentence = None):
+def send_encr_msg(secret1, sentence = None):
     if sentence == None:
         sentence = input("Enter Sentence: ")
     lst_of_sentences = split_sentence(sentence)
@@ -44,14 +65,16 @@ def send_encr_msg(sentence = None):
     dict = {"sentence": sentence}
     createJSONFile(dict, 0)
     ##############################################GUI################################################
-    # generate keys for encryption (over the large prime field chosen in "constants.py")
-    secret1, secret2 = generateKeys()
+    
     # generate the Schnorr key (over the prime field defined in schnorr lib)
     sch_key = schnorr_lib.sch_key_gen()
-    ##############################################GUI################################################
+
+    ## CHANGE NEED HERE!
+    '''##############################################GUI################################################
     dict = {"secret1": str(secret1), "secret2": str(secret2), "sch_key": str(sch_key)}
     createJSONFile(dict, 1)
-    ##############################################GUI################################################
+    ##############################################GUI################################################'''
+
     """
     Encrypt input
     """
@@ -66,6 +89,7 @@ def send_encr_msg(sentence = None):
     """
     message_hash_digest = schnorr_lib.msg_hash_digest(sentence)
     private_key_as_hex_string = schnorr_lib.get_hex_private_key(sch_key)
+    
     ##############################################GUI################################################
     dict = {"message_hash_digest": message_hash_digest.hex(), "private_key_as_hex_string": private_key_as_hex_string}
     createJSONFile(dict, 3)
@@ -87,25 +111,26 @@ def send_encr_msg(sentence = None):
     dict = {"public_key": public_key.hex()}
     createJSONFile(dict, 5)
     
-    return message_hash_digest, public_key, sig, encrypted_blocks, secret2, sentence, e_whole_sentence
+    return message_hash_digest, public_key, sig, encrypted_blocks, sentence, e_whole_sentence
 
 # Moved decr + sig check logic from main into function to avoid code duplication 
-def msg_decr(message_hash_digest, public_key, sig, encrypted_blocks, secret2, sentence, e_whole_sentence):
+def msg_decr(message_hash_digest, public_key, sig, encrypted_blocks, secret1, sentence, e_whole_sentence, sig_for_key, pk_hash_digest, public_key_dh):
     """
     Verify signature using public key
     """
-
+    result_dh_sig = schnorr_lib.schnorr_verify(pk_hash_digest, public_key_dh, sig_for_key)
+    print(f"Signature key verification result: {result_dh_sig}")
     # Verify sig
     result = schnorr_lib.schnorr_verify(message_hash_digest, public_key, sig)
     print(f"Signature verification result: {result}")
     tmp = e_whole_sentence.encode()
     print(f'Encrypted String (as binary): {tmp}')
     # If sig is good, decrypt cmd
-    if result:
+    if result and result_dh_sig:
         """
         Decrypt message
         """
-        decrypted_text = decrypt_many_single_key(encrypted_blocks, secret2)
+        decrypted_text = decrypt_many_single_key(encrypted_blocks, secret1)
         try:
             assert decrypted_text[:len(sentence)] == sentence
         except AssertionError:
@@ -115,7 +140,7 @@ def msg_decr(message_hash_digest, public_key, sig, encrypted_blocks, secret2, se
         print("\nDecrypted:\t", decrypted_text)
         createJSONFile({"DecryptedSentence": decrypted_text}, 6)
     else:
-        print("I dont know you, you are not the original user!")
+        print("I dont know you, you are not the original user! payment canceled!")
         
 # Main function
 def main():
@@ -136,18 +161,20 @@ def main():
         else:
             print("User Not Found! Wrong input.")
 
-    message_hash_digest, public_key, sig, encrypted_blocks, secret2, sentence, e_whole_sentence = send_encr_msg()
+    secret1, sig_for_key, pk_hash_digest, public_key_dh = sign_dh_keys()
+    message_hash_digest, public_key, sig, encrypted_blocks, sentence, e_whole_sentence = send_encr_msg(secret1)
     ### END OF USER SIDE, cmd now been sent to BANK
 
     ### BANK SIDE, verify sig and if good, decrypt cmd
-    msg_decr(message_hash_digest, public_key, sig, encrypted_blocks, secret2, sentence, e_whole_sentence)
+    msg_decr(message_hash_digest, public_key, sig, encrypted_blocks, secret1, sentence, e_whole_sentence, sig_for_key, pk_hash_digest, public_key_dh)
 
     ## BANK SEND ACK ##
     print("Pending Bank Approval...")
-    message_hash_digest, public_key, sig, encrypted_blocks, secret2, sentence, e_whole_sentence = send_encr_msg("Successful Payment")
+    secret1, sig_for_key, pk_hash_digest, public_key_dh = sign_dh_keys()
+    message_hash_digest, public_key, sig, encrypted_blocks, sentence, e_whole_sentence = send_encr_msg(secret1,"Successful Payment")
 
     ### USER SIDE, verify sig and if good, decrypt cmd
-    msg_decr(message_hash_digest, public_key, sig, encrypted_blocks, secret2, sentence, e_whole_sentence)
+    msg_decr(message_hash_digest, public_key, sig, encrypted_blocks, secret1, sentence, e_whole_sentence, sig_for_key, pk_hash_digest, public_key_dh)
 
     ## TODO: 
     # 1. Bank will carry out the cmd (if legal cmd)
