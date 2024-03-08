@@ -12,7 +12,8 @@ From Rotem :
 - Weak keys? other security issues?
 """
 
-JSONfilenameArray = ["SentenceToSend", "SecretKeys", "EncryptedSentence", "Schnorr_get_message_digest", "Schnorr_sign_via_private_key", "Public_Key", "DecryptedSentence"]
+JSONfilenameArray = ["SentenceToSend", "SecretKeys", "EncryptedSentence", "Schnorr_get_message_digest", "Schnorr_sign_via_private_key", "Public_Key", "DecryptedSentence", "PublicKeys"]
+JSONfilenameArrayAck = ["SentenceToSendAck", "SecretKeysAck", "EncryptedSentenceAck", "Schnorr_get_message_digestAck", "Schnorr_sign_via_private_keyAck", "Public_KeyAck", "DecryptedSentenceAck", "PublicKeysAck"]
 
 # split message to 128 bits blocks
 def split_sentence(sentence):
@@ -24,17 +25,34 @@ def split_sentence(sentence):
     return lst_of_sentences
 
 # Create a JSON file to store the information as strings, for the sake of clean presentation
-def createJSONFile(dictionary, index):
+def createJSONFile(dictionary, index, isAck):
     # Create a JSON file to store the keys
+    if not isAck:
+        jsonFileName = "./Gui/JSONFiles/" + JSONfilenameArray[index] + ".json"
+    else:
+        jsonFileName = "./Gui/JSONFiles/" + JSONfilenameArrayAck[index] + ".json"
     
-    jsonFileName = "./Gui/JSONFiles/" + JSONfilenameArray[index] + ".json"
     
     json_object = json.dumps(dictionary, indent = 4)
     
     with open(jsonFileName, 'w') as outfile:
         outfile.write(json_object)
+        
+def generateJSONFiles(sentence, e_whole_sentence, encrypted_blocks, message_hash_digest, private_key_as_hex_string, sig, public_key, isAck):
+    
+    print("sentence: ", sentence)
+    dict = {"Sentence": sentence}
+    createJSONFile(dict, 0, isAck)
+    dict = {"EncryptedSentence": f"`{e_whole_sentence.encode()}`", "EncryptedBlocks": encrypted_blocks}
+    createJSONFile(dict, 2, isAck)
+    dict = {"message_hash_digest": message_hash_digest.hex(), "private_key_as_hex_string": private_key_as_hex_string}
+    createJSONFile(dict, 3, isAck)
+    dict = {"Signature": sig.hex()}
+    createJSONFile(dict, 4, isAck)
+    dict = {"public_key": public_key.hex()}
+    createJSONFile(dict, 5, isAck)
 
-def sign_dh_keys():
+def sign_dh_keys(isAck):
     # generate keys for encryption (over the large prime field chosen in "constants.py")
     # From Rotem:
     """
@@ -64,7 +82,9 @@ def sign_dh_keys():
     ### @ ME (maxim)
     ##############################################GUI################################################
     dict = {"secret1": str(user_diffie_hellman_key), "secret2": str(bank_diffie_hellman_key), "sch_key": str(sch_key_for_key)}
-    createJSONFile(dict, 1)
+    createJSONFile(dict, 1, isAck)
+    dict = {"user_public_key": str(user_pub_key), "bank_public_key": str(bank_public_key)}
+    createJSONFile(dict, 7, isAck)
     ##############################################GUI################################################
     return user_diffie_hellman_key, sig, pk_hash_digest, public_key_dh
 
@@ -73,60 +93,43 @@ def check_dh_key_sign(pk_hash_digest, public_key, sig_for_key):
     
 
 # Moved encr + sig logic from main into function to avoid code duplication 
-def send_encr_msg(secret1, sentence = None):
+def send_encr_msg(secret1, isAck, sentence = None):
     if sentence == None:
         sentence = input("Enter Sentence: ")
     lst_of_sentences = split_sentence(sentence)
     ## Cmd will be encr + sig and sent to BANK:
-    ##############################################GUI################################################
-    dict = {"sentence": sentence}
-    createJSONFile(dict, 0)
-    ##############################################GUI################################################
+
     
     # generate the Schnorr key (over the prime field defined in schnorr lib)
     sch_key = schnorr_lib.sch_key_gen()
 
-    ## CHANGE NEED HERE!
-    '''##############################################GUI################################################
-    dict = {"secret1": str(secret1), "secret2": str(secret2), "sch_key": str(sch_key)}
-    createJSONFile(dict, 1)
-    ##############################################GUI################################################'''
 
     """
     Encrypt input
     """
     # for debug     , for decryption / to send
     e_whole_sentence, encrypted_blocks = encrypt_many_single_key(lst_of_sentences, secret1)
-    ##############################################GUI################################################
-    dict = {"EncryptedSentence": f"`{e_whole_sentence.encode()}`", "EncryptedBlocks": encrypted_blocks}
-    createJSONFile(dict, 2)
-    ##############################################GUI################################################
+
     """
     Schnorr sig get original message digest
     """
     message_hash_digest = schnorr_lib.msg_hash_digest(sentence)
     private_key_as_hex_string = schnorr_lib.get_hex_private_key(sch_key)
     
-    ##############################################GUI################################################
-    dict = {"message_hash_digest": message_hash_digest.hex(), "private_key_as_hex_string": private_key_as_hex_string}
-    createJSONFile(dict, 3)
-    ##############################################GUI################################################
     """
     Sign message using Schnorr signature via private key (private_key_1)
     """
     sig = schnorr_lib.schnorr_sign(message_hash_digest, private_key_as_hex_string)
     print(f"Signature: {sig.hex()}")
-    ##############################################GUI################################################
-    dict = {"Signature": sig.hex()}
-    createJSONFile(dict, 4)
-    ##############################################GUI################################################
+
     """
     Generate public key PROPERLY to with message
     """
     public_key = schnorr_lib.pubkey_gen_from_hex(private_key_as_hex_string)
+    
     ##############################################GUI################################################
-    dict = {"public_key": public_key.hex()}
-    createJSONFile(dict, 5)
+    generateJSONFiles(sentence, e_whole_sentence, encrypted_blocks, message_hash_digest, private_key_as_hex_string, sig, public_key, isAck)
+    ##############################################GUI################################################
     
     return message_hash_digest, public_key, sig, encrypted_blocks, sentence, e_whole_sentence
 
@@ -155,9 +158,10 @@ def msg_decr(message_hash_digest, public_key, sig, encrypted_blocks, secret1, se
                     file=sys.stderr)
             exit(-1)
         print("\nDecrypted:\t", decrypted_text)
-        createJSONFile({"DecryptedSentence": decrypted_text}, 6)
     else:
         print("I dont know you, you are not the original user! payment canceled!")
+        
+    return decrypted_text
         
 # Main function
 def main():
@@ -178,21 +182,23 @@ def main():
         else:
             print("User Not Found! Wrong input.")
 
-    secret1, sig_for_key, pk_hash_digest, public_key_dh = sign_dh_keys()
-    message_hash_digest, public_key, sig, encrypted_blocks, sentence, e_whole_sentence = send_encr_msg(secret1)
+    secret1, sig_for_key, pk_hash_digest, public_key_dh = sign_dh_keys(isAck = False)
+    message_hash_digest, public_key, sig, encrypted_blocks, sentence, e_whole_sentence = send_encr_msg(secret1, False, None)
     ### END OF USER SIDE, cmd now been sent to BANK
 
     ### BANK SIDE, verify sig and if good, decrypt cmd
-    msg_decr(message_hash_digest, public_key, sig, encrypted_blocks, secret1, sentence, e_whole_sentence, sig_for_key, pk_hash_digest, public_key_dh)
+    decrypted_text = msg_decr(message_hash_digest, public_key, sig, encrypted_blocks, secret1, sentence, e_whole_sentence, sig_for_key, pk_hash_digest, public_key_dh)
+    createJSONFile({"DecryptedSentence": decrypted_text}, 6, False)
 
     ## BANK SEND ACK ##
     print("Pending Bank Approval...")
-    secret1, sig_for_key, pk_hash_digest, public_key_dh = sign_dh_keys()
-    message_hash_digest, public_key, sig, encrypted_blocks, sentence, e_whole_sentence = send_encr_msg(secret1,"Successful Payment")
+    secret1, sig_for_key, pk_hash_digest, public_key_dh = sign_dh_keys(isAck = True)
+    message_hash_digest, public_key, sig, encrypted_blocks, sentence, e_whole_sentence = send_encr_msg(secret1, True, "Successful Payment")
 
     ### USER SIDE, verify sig and if good, decrypt cmd
-    msg_decr(message_hash_digest, public_key, sig, encrypted_blocks, secret1, sentence, e_whole_sentence, sig_for_key, pk_hash_digest, public_key_dh)
+    decrypted_text = msg_decr(message_hash_digest, public_key, sig, encrypted_blocks, secret1, sentence, e_whole_sentence, sig_for_key, pk_hash_digest, public_key_dh)
 
+    createJSONFile({"DecryptedSentence": decrypted_text}, 8, True)
     ## TODO: 
     # 1. Bank will carry out the cmd (if legal cmd)
     # 2. Will send back (encr?) msg that cmd was completed successfully
