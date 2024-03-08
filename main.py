@@ -12,8 +12,8 @@ From Rotem :
 - Weak keys? other security issues?
 """
 
-JSONfilenameArray = ["SentenceToSend", "SecretKeys", "EncryptedSentence", "Schnorr_get_message_digest", "Schnorr_sign_via_private_key", "Public_Key", "DecryptedSentence", "PublicKeys"]
-JSONfilenameArrayAck = ["SentenceToSendAck", "SecretKeysAck", "EncryptedSentenceAck", "Schnorr_get_message_digestAck", "Schnorr_sign_via_private_keyAck", "Public_KeyAck", "DecryptedSentenceAck", "PublicKeysAck"]
+JSONfilenameArray = ["SentenceToSend", "SecretKeys", "EncryptedSentence", "Schnorr_get_message_digest", "Schnorr_sign_via_private_key", "Public_Key_schnorr", "DecryptedSentence", "PublicKeys"]
+JSONfilenameArrayAck = ["SentenceToSendAck", "SecretKeysAck", "EncryptedSentenceAck", "Schnorr_get_message_digestAck", "Schnorr_sign_via_private_keyAck", "Public_Key_schnorr_Ack", "DecryptedSentenceAck", "PublicKeysAck"]
 
 # split message to 128 bits blocks
 def split_sentence(sentence):
@@ -49,7 +49,7 @@ def generateJSONFiles(sentence, e_whole_sentence, encrypted_blocks, message_hash
     createJSONFile(dict, 3, isAck)
     dict = {"Signature": sig.hex()}
     createJSONFile(dict, 4, isAck)
-    dict = {"public_key": public_key.hex()}
+    dict = {"public_key_sh": public_key.hex()}
     createJSONFile(dict, 5, isAck)
 
 def sign_dh_keys(isAck):
@@ -79,13 +79,14 @@ def sign_dh_keys(isAck):
     private_key_as_hex_string_for_key = schnorr_lib.get_hex_private_key(sch_key_for_key)
     sig = schnorr_lib.schnorr_sign(pk_hash_digest, private_key_as_hex_string_for_key)
     public_key_dh = schnorr_lib.pubkey_gen_from_hex(private_key_as_hex_string_for_key)
-    ### @ ME (maxim)
+
     ##############################################GUI################################################
-    dict = {"secret1": str(user_diffie_hellman_key), "secret2": str(bank_diffie_hellman_key), "sch_key": str(sch_key_for_key)}
+    dict = {"user_dh": str(user_diffie_hellman_key), "bank_dh": str(bank_diffie_hellman_key), "sch_key": str(sch_key_for_key), "user_private": str(user_private_key), "bank_private": str(bank_private_key)}
     createJSONFile(dict, 1, isAck)
     dict = {"user_public_key": str(user_pub_key), "bank_public_key": str(bank_public_key)}
     createJSONFile(dict, 7, isAck)
     ##############################################GUI################################################
+    
     return user_diffie_hellman_key, sig, pk_hash_digest, public_key_dh
 
 def check_dh_key_sign(pk_hash_digest, public_key, sig_for_key):
@@ -198,7 +199,7 @@ def main():
     ### USER SIDE, verify sig and if good, decrypt cmd
     decrypted_text = msg_decr(message_hash_digest, public_key, sig, encrypted_blocks, secret1, sentence, e_whole_sentence, sig_for_key, pk_hash_digest, public_key_dh)
 
-    createJSONFile({"DecryptedSentence": decrypted_text}, 8, True)
+    createJSONFile({"DecryptedSentence": decrypted_text}, 6, True)
     ## TODO: 
     # 1. Bank will carry out the cmd (if legal cmd)
     # 2. Will send back (encr?) msg that cmd was completed successfully
