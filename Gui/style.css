@@ -99,3 +99,9 @@ button {
 .bankButton {
     background-color: transparent;
 }
+
+.paymentLabel {
+    color: #bd1919;
+    font-size: 20px;
+    margin-bottom: 10px;
+}

@@ -286,17 +286,17 @@ document.getElementById('bankButton').addEventListener('click', async function (
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  // Display the public key received from the user
-  const publicKeyReceivedLine = document.createElement('p');
-  publicKeyReceivedLine.style.margin = "5px";
-  publicKeyReceivedLine.style.color = "green";
-  publicKeyReceivedLine.style.textDecoration = "underline";
+  // Display the hash digest received from the user
+  const hashDigestReceived = document.createElement('p');
+  hashDigestReceived.style.margin = "5px";
+  hashDigestReceived.style.color = "green";
+  hashDigestReceived.style.textDecoration = "underline";
 
-  const publicKey = await getPublicKeyData("Public_Key")
-  const publicKeyShortened = createTruncatedTextElement(publicKey.public_key, 35);
+  const publicKey = await getPublicKeyData("Schnorr_get_message_digest")
+  const publicKeyShortened = createTruncatedTextElement(publicKey.message_hash_digest, 35);
 
-  setTimeout(() => bankElement.appendChild(publicKeyReceivedLine), 2500);
-  setTimeout(() => publicKeyReceivedLine.textContent = "Public key received:", 2500);
+  setTimeout(() => bankElement.appendChild(hashDigestReceived), 2500);
+  setTimeout(() => hashDigestReceived.textContent = "Shared key hash digest received:", 2500);
   setTimeout(() => bankElement.appendChild(publicKeyShortened), 2500);
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -308,30 +308,32 @@ document.getElementById('bankButton').addEventListener('click', async function (
   decodedMessageLine.style.textDecoration = "underline";
 
   const decodedMessage = await getPublicKeyData("SentenceToSend")
-  const decodedMessageShortened = createTruncatedTextElement(decodedMessage.sentence, 50);
+  const decodedMessageShortened = createTruncatedTextElement(decodedMessage.Sentence, 50);
 
   const checkingSignature = createTruncatedTextElement("Checking signature...", 50);
-  const preparingPublicKey = createTruncatedTextElement("Preparing public key...", 50);
-  const decryptingMessage = createTruncatedTextElement("Decrypting message...", 50);
+  const signatureVerified = createTruncatedTextElement("Signature verified!!!!", 50);
+  const preparingPublicKey = createTruncatedTextElement("Preparing shared key...", 50);
+  const decryptingMessage = createTruncatedTextElement("Decrypting message with RC6...", 50);
   const success = createTruncatedTextElement("Success!", 50);
   success.style.color = "green";
 
   setTimeout(() => bankElement.appendChild(checkingSignature), 3500);
-  setTimeout(() => bankElement.appendChild(preparingPublicKey), 4500);
-  setTimeout(() => bankElement.appendChild(decryptingMessage), 5500);
-  setTimeout(() => bankElement.appendChild(success), 6500);
+  setTimeout(() => bankElement.appendChild(signatureVerified), 4500);
+  setTimeout(() => bankElement.appendChild(preparingPublicKey), 5500);
+  setTimeout(() => bankElement.appendChild(decryptingMessage), 6500);
+  setTimeout(() => bankElement.appendChild(success), 7500);
 
 
-  setTimeout(() => bankElement.appendChild(decodedMessageLine), 7000);
-  setTimeout(() => decodedMessageLine.textContent = "Decoded message:", 7000);
-  setTimeout(() => bankElement.appendChild(decodedMessageShortened), 7000);
+  setTimeout(() => bankElement.appendChild(decodedMessageLine), 8500);
+  setTimeout(() => decodedMessageLine.textContent = "Decoded message:", 8500);
+  setTimeout(() => bankElement.appendChild(decodedMessageShortened), 8500);
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   setTimeout(() => {
     document.getElementById('successButton').style.backgroundColor = "blue";
-    document.getElementById('successButton').textContent = "Send \"Success\" to User";
-  }, 7500);
+    document.getElementById('successButton').textContent = "Send \"Successful Payment\" to User";
+  }, 9500);
 
   // Send an encoded "Success" message to the user
   const successMessageLine = document.createElement('p');
@@ -387,9 +389,11 @@ document.getElementById('successButton').addEventListener('click', async functio
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+  const messageToUser = await getPublicKeyData("EncryptedSentenceAck")
+
   // Encrypt the "Success" message using the public key, and send it to the user
   const encryptingMessage = createTruncatedTextElement("Encrypted message:", 50);
-  const encryptedSuccess = createTruncatedTextElement("SOME ENCRYPTED MESSAGE !@$!@#$#$ygheatr", 50);
+  const encryptedSuccess = createTruncatedTextElement(messageToUser.EncryptedSentence.slice(3, messageToUser.EncryptedSentence.length - 2), 50);
   encryptingMessage.style.color = "green";
 
   setTimeout(() => document.getElementById('output').appendChild(encryptingMessage), 1500);
