@@ -5,7 +5,6 @@ import constants
 import schnorr_lib
 
 # condition to use the 256bit prime from the schnorr library as both the DH prime and Schnorr prime.
-# Rotem 8/3: modified to not use the same prime, back to using my large one
 USING_SCHNORR_PRIME_IN_DH = False
 if USING_SCHNORR_PRIME_IN_DH:
     PRIME = schnorr_lib.p
@@ -51,31 +50,3 @@ def validateDiffieHellmanKey(dh_key, bank_private_key, user_pub_key):
     # validate that dh_key is the same as user_pub_key ^ bank_private_key
     bank_dh_key = validateDiffieHellmanPublicKey(bank_private_key, user_pub_key)
     return compareDiffieHellmanKeys(dh_key, bank_dh_key)
-
-
-def generateKeys():
-    """Returns both secret keys AFTER THE EXCHANGE.
-     TODO: simulate the actual exchange, remember that this function returns identical keys, NOT PRIVATE KEYS"""
-    # prime and generator are given in constants.
-    P, G = PRIME, GENERATOR
-    # print(f"Using prime: {P} with generator {G}")
-
-    # auto generate Private Keys
-    x1, x2 = get_safe_key(P), get_safe_key(P)
-    # print(f"Generated private keys: {x1=}, {x2=}")
-
-    # Calculate Public Keys:
-    # the whole op stays in C and is faster
-    y1, y2 = pow(G, x1, P), pow(G, x2, P)
-
-    # Generate Secret Keys
-    k1, k2 = pow(y2, x1, P), pow(y1, x2, P)
-    # print(f"\nSecret Key For User 1 Is {k1}\nSecret Key For User 2 Is {k2}\n")
-
-    # if k1 == k2:
-    # print("Keys Have Been Exchanged Successfully")
-    # else:
-    # print("Keys Have Not Been Exchanged Successfully")
-
-    assert k1 == k2
-    return k1, k2

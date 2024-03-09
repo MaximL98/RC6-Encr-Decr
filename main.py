@@ -6,11 +6,6 @@ from dh_key_gen import *
 
 import json
 
-"""
-From Rotem :
-- Check if our keys are defined properly (we use the key from DH in RC6)
-- Weak keys? other security issues?
-"""
 
 JSONfilenameArray = ["SentenceToSend", "SecretKeys", "EncryptedSentence", "Schnorr_get_message_digest", "Schnorr_sign_via_private_key", "Public_Key_schnorr", "DecryptedSentence", "PublicKeys"]
 JSONfilenameArrayAck = ["SentenceToSendAck", "SecretKeysAck", "EncryptedSentenceAck", "Schnorr_get_message_digestAck", "Schnorr_sign_via_private_keyAck", "Public_Key_schnorr_Ack", "DecryptedSentenceAck", "PublicKeysAck"]
@@ -54,13 +49,7 @@ def generateJSONFiles(sentence, e_whole_sentence, encrypted_blocks, message_hash
 
 def sign_dh_keys(isAck):
     # generate keys for encryption (over the large prime field chosen in "constants.py")
-    # From Rotem:
-    """
-    I assume this next line is supposed to be the safe-channel, as in the operation where the user
-    and the bank swap the DH keys, since this is the only call in the file.
-    I hope you didn't delete it as the file changed drastically.
-    """
-    # secret1, secret2 = generateKeys()
+
     # user generates random key
     user_private_key = generateDiffieHellmanPrivateKey()
     # user calculates public key
@@ -200,10 +189,6 @@ def main():
     decrypted_text = msg_decr(message_hash_digest, public_key, sig, encrypted_blocks, secret1, sentence, e_whole_sentence, sig_for_key, pk_hash_digest, public_key_dh)
 
     createJSONFile({"DecryptedSentence": decrypted_text}, 6, True)
-    ## TODO: 
-    # 1. Bank will carry out the cmd (if legal cmd)
-    # 2. Will send back (encr?) msg that cmd was completed successfully
-    ## END?
 
 
 
