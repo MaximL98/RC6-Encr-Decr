@@ -167,24 +167,25 @@ document.getElementById('encrypt-button').addEventListener('click', async functi
   hashDigestLine.style.margin = "3px";
   hashDigestLine.style.color = "green";
   hashDigestLine.style.textDecoration = "underline";
-  const privateKeyAsHexLine = document.createElement('p');
-  privateKeyAsHexLine.style.margin = "3px";
-  privateKeyAsHexLine.style.color = "green";
-  privateKeyAsHexLine.style.textDecoration = "underline";
+  const publicKeyAsHexLine = document.createElement('p');
+  publicKeyAsHexLine.style.margin = "3px";
+  publicKeyAsHexLine.style.color = "green";
+  publicKeyAsHexLine.style.textDecoration = "underline";
 
   const hashDigest = await getPublicKeyData("Schnorr_get_message_digest")
   const hashDigestShortened = createTruncatedTextElement(hashDigest.message_hash_digest, 35);
-  const privateKeyAsHexShortened = createTruncatedTextElement(hashDigest.private_key_as_hex_string, 35);
+  const publicSchnorrKey = await getPublicKeyData("Public_Key_Schnorr")
+  const publicSchnorrKeyShortened = createTruncatedTextElement(publicSchnorrKey.public_key_sh, 35);
 
   // Display the hash digest of the shared key
   setTimeout(() => outputElement.appendChild(hashDigestLine), 7500);
-  setTimeout(() => hashDigestLine.textContent = "Hash digest of the shared key:", 7500);
+  setTimeout(() => hashDigestLine.textContent = "Hash digest:", 7500);
   setTimeout(() => outputElement.appendChild(hashDigestShortened), 7500);
 
   // Display the private Schnorr key as a hexadecimal string
-  setTimeout(() => outputElement.appendChild(privateKeyAsHexLine), 8500);
-  setTimeout(() => privateKeyAsHexLine.textContent = "Generated private Schnorr Key using digest:", 8500);
-  setTimeout(() => outputElement.appendChild(privateKeyAsHexShortened), 8500);
+  setTimeout(() => outputElement.appendChild(publicKeyAsHexLine), 8500);
+  setTimeout(() => publicKeyAsHexLine.textContent = "Generated public Schnorr Key using digest:", 8500);
+  setTimeout(() => outputElement.appendChild(publicSchnorrKeyShortened), 8500);
 
   // Display the signature generated from the hash digest and the private Schnorr key
   const SignatureLine = document.createElement('p');
@@ -287,16 +288,16 @@ document.getElementById('bankButton').addEventListener('click', async function (
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   // Display the hash digest received from the user
-  const hashDigestReceived = document.createElement('p');
-  hashDigestReceived.style.margin = "5px";
-  hashDigestReceived.style.color = "green";
-  hashDigestReceived.style.textDecoration = "underline";
+  const publicSchnorrReceived = document.createElement('p');
+  publicSchnorrReceived.style.margin = "5px";
+  publicSchnorrReceived.style.color = "green";
+  publicSchnorrReceived.style.textDecoration = "underline";
 
-  const publicKey = await getPublicKeyData("Schnorr_get_message_digest")
-  const publicKeyShortened = createTruncatedTextElement(publicKey.message_hash_digest, 35);
+  const publicKey = await getPublicKeyData("Public_Key_schnorr")
+  const publicKeyShortened = createTruncatedTextElement(publicKey.public_key_sh, 35);
 
-  setTimeout(() => bankElement.appendChild(hashDigestReceived), 2500);
-  setTimeout(() => hashDigestReceived.textContent = "Shared key hash digest received:", 2500);
+  setTimeout(() => bankElement.appendChild(publicSchnorrReceived), 2500);
+  setTimeout(() => publicSchnorrReceived.textContent = "Public Schnorr key received:", 2500);
   setTimeout(() => bankElement.appendChild(publicKeyShortened), 2500);
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
