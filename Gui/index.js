@@ -304,7 +304,7 @@ document.getElementById('bankButton').addEventListener('click', async function (
 
   // Decode the encrypted message using the public key and verify the signature
   const decodedMessageLine = document.createElement('p');
-  decodedMessageLine.style.margin = "5px";
+  decodedMessageLine.style.margin = "3px";
   decodedMessageLine.style.color = "green";
   decodedMessageLine.style.textDecoration = "underline";
 
@@ -338,7 +338,7 @@ document.getElementById('bankButton').addEventListener('click', async function (
 
   // Send an encoded "Success" message to the user
   const successMessageLine = document.createElement('p');
-  successMessageLine.style.margin = "5px";
+  successMessageLine.style.margin = "3px";
   successMessageLine.style.color = "red";
 
   document.getElementById('bankButton').classList.add('sendToUser');
@@ -382,7 +382,7 @@ document.getElementById('successButton').addEventListener('click', async functio
   }, 2000);
 
   const encryptionSuccessMessageLine = document.createElement('p');
-  encryptionSuccessMessageLine.style.margin = "5px";
+  encryptionSuccessMessageLine.style.margin = "3px";
   encryptionSuccessMessageLine.style.color = "green";
 
   setTimeout(() => document.getElementById('output').appendChild(encryptionSuccessMessageLine), 500);
@@ -402,7 +402,7 @@ document.getElementById('successButton').addEventListener('click', async functio
 
   // Send the encoded "Success" message to the user
   const successMessageLine = document.createElement('p');
-  successMessageLine.style.margin = "5px";
+  successMessageLine.style.margin = "3px";
   successMessageLine.style.color = "green";
   successMessageLine.style.textDecoration = "underline";
 
@@ -432,7 +432,7 @@ document.getElementById("sendToUser").addEventListener('click', async function (
   }
 
   const userMessageLine = document.createElement('p');
-  userMessageLine.style.margin = "5px";
+  userMessageLine.style.margin = "3px";
   userMessageLine.style.color = "green";
 
   setTimeout(() => document.getElementById('user').appendChild(userMessageLine), 500);
@@ -454,7 +454,7 @@ async function getPublicKeyData(fileName) {
 
 function createTruncatedTextElement(text, maxLength) {
   const span = document.createElement('p');
-  span.style.margin = "5px";
+  span.style.margin = "3px";
   shortenedText = createShortText(text, maxLength);
 
   if (text.length > maxLength) {

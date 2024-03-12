@@ -7,6 +7,7 @@ body {
     align-items: center; /* Center horizontally */
     justify-content: center; /* Center vertically */
     min-height: 100vh; /* Ensure content takes up full screen height */
+    min-width: 100vw;
     margin: 0;    
 }
 
@@ -16,7 +17,7 @@ body {
     align-items: center;
     background-color: #333; /* Slightly lighter background for blocks */
     border-radius: 8px; 
-    margin-left: 50px;
+    margin-left: 0px;
     margin-right: 50px;
     margin-top: 0px;
     margin-bottom: 0px;
@@ -25,12 +26,12 @@ body {
 }
 
 h2 {
-    margin-bottom: 15px;
+    margin-bottom: 10px;
 }
 
 .input-block {
     height: 1000px;
-    padding: 10px;
+    padding: 5px;
 
     margin-bottom: 20px; /* Add spacing between blocks */
     width: 500px; 
@@ -43,7 +44,7 @@ h2 {
 
 .info-block {
     height: 1000px;
-    padding: 10px;
+    padding: 5px;
 
     margin-bottom: 20px; /* Add spacing between blocks */
     width: 500px; 
