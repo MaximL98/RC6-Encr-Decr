@@ -184,7 +184,7 @@ document.getElementById('encrypt-button').addEventListener('click', async functi
 
   // Display the private Schnorr key as a hexadecimal string
   setTimeout(() => outputElement.appendChild(publicKeyAsHexLine), 8500);
-  setTimeout(() => publicKeyAsHexLine.textContent = "Generated public Schnorr Key using digest:", 8500);
+  setTimeout(() => publicKeyAsHexLine.textContent = "Generated public Schnorr Key using privete Schnorr:", 8500);
   setTimeout(() => outputElement.appendChild(publicSchnorrKeyShortened), 8500);
 
   // Display the signature generated from the hash digest and the private Schnorr key
@@ -386,7 +386,7 @@ document.getElementById('successButton').addEventListener('click', async functio
   encryptionSuccessMessageLine.style.color = "green";
 
   setTimeout(() => document.getElementById('output').appendChild(encryptionSuccessMessageLine), 500);
-  setTimeout(() => encryptionSuccessMessageLine.textContent = "Encoding \"Success\" message to user", 500);
+  setTimeout(() => encryptionSuccessMessageLine.textContent = "Encrypting \"Success\" message to user", 500);
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
